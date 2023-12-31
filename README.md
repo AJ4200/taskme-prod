@@ -6,13 +6,12 @@
 
 <h2>Project Screenshots:</h2>
 
-<img src="project assets/Screenshot3.png" alt="project-screenshot" width="700" height="400/">
+<img src="dccdc" alt="project-screenshot" width="600" height="300/">
 
-<img src="project assets/Screenshot4.png" alt="project-screenshot" width="700" height="400/">
+<img src="cdcdc" alt="project-screenshot" width="600" height="600/">
 
-<img src="project assets/Screenshot2.png" alt="project-screenshot" width="700" height="400/">
-
-<img src="project assets/Screenshot1.png" alt="project-screenshot" width="700" height="400/">
+  <img src="cdcdc" alt="project-screenshot" width="600" height="600/">
+  
 <h2>🧐 Features</h2>
 
 Here're some of the project's best features:
@@ -26,7 +25,7 @@ Here're some of the project's best features:
 <p>1. clone repo:</p>
 
 ```
-git clone https://github.com/mazibuko-s/taskme.git
+git clone https://github.com/your-username/task-me.git  
 ```
 
 <p>2. Install Dependencies:</p>
@@ -61,8 +60,4 @@ Technologies used in the project:
 
 <h2>🛡️ License:</h2>
 
-<<<<<<< HEAD
 This project is licensed under the MIT LICENSE
-=======
-This project is licensed under the MIT LICENSE
->>>>>>> 1a878a799c25758a8cdb8b46e0dfbc188e0bac0a
