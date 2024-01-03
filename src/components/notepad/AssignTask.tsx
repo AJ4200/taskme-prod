@@ -55,8 +55,6 @@ setConfirmation(
       ?.username || "Unknown User"
   }`,
 );
-
-
         // Close the modal after a delay
         setTimeout(() => {
           onClose();
