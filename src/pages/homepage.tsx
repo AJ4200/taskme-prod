@@ -68,6 +68,7 @@ const tokenCookie = sessionStorage.getItem("token");
         </div>
       </div>
       <div className="paper">
+        <h1 className="text-center text-6xl underline mb-10">Welcome!!!</h1>
         <div className="flex justify-evenly">
           <div>
             <p className="mb-4 text-lg font-semibold">Get to tasking</p>
