@@ -5,7 +5,7 @@ import classnames from "classnames";
 const Footer: React.FC = () => {
   return (
     <motion.div
-      className={classnames("fixed -bottom-4 w-full",
+      className={classnames("fixed bottom-0 w-full",
         "flex flex-row justify-center items-center h-[30px] sm:h-[50px] py-2 px-8")}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

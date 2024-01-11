@@ -90,7 +90,7 @@ input:focus::placeholder
   outline: none;
   background-color: rgb(71, 71, 71);
   padding: 10px 20px;
-  font-size: 12px;
+  font-size: 1rem;
   font-weight: 700;
   color: #fff;
   border-radius: 5px;
@@ -101,4 +101,8 @@ input:focus::placeholder
 .flip:active {
   transform: translateY(5px);
   box-shadow: 0px 0px 0px 0px #a29bfe;
+}
+
+.text-shadow{
+ text-shadow: 1px 1px 1px black;
 }

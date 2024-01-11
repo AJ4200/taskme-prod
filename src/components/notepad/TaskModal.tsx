@@ -51,8 +51,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
     >
       <form onSubmit={handleSubmit} className="notepad">
         <div className="top flex items-center justify-between">
-          <h1 className="text-4xl text-gray-300">
-            Task.Me<span className="text-sm">create task</span>
+         <span className="text-sm text-gray-300 ">✒️</span> <h1 className="text-4xl text-gray-300 text-center">
+           Create Task
           </h1>
           <button
             className="text-8xl text-gray-500 hover:text-gray-700"
@@ -67,7 +67,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mb-4 w-full border px-3 py-2"
+            className="mb-4 w-full border px-3 py-2 border-b-inherit"
             required
           />
 
@@ -100,7 +100,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
 
           <button
             type="submit"
-            className="rounded bg-gray-500 px-4 py-2 text-white"
+            className="flip opacity-70 text-white text-shadow text-lg"
           >
             {loading ? "Creating..." : "Create Task"}
           </button>

@@ -3,41 +3,39 @@ import axios from "axios";
 import { IoMdPersonAdd } from "react-icons/io";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
+import { useForm } from "react-hook-form";
 
 const Register = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { register, handleSubmit } = useForm();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: any) => {
     try {
-      const response = await axios.post("/api/auth/register", {
-        username,
-        email,
-        password,
-      });
+      setLoading(true);
+      const response = await axios.post("/api/auth/register", data);
       const { token, user } = response.data;
 
       // Set the token as an HttpOnly cookie
       document.cookie = `token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict`;
-        sessionStorage.setItem("userId", response.data.user.id);
-        sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("username", response.data.user.username);
+      sessionStorage.setItem("userId", response.data.user.id);
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem("username", response.data.user.username);
       console.log("Registration successful:", user);
 
-      // redirect
+      // Redirect
       router.push("/tasks");
     } catch (error) {
       console.error(error);
       // Handle registration error here
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center  ">
-      <form onSubmit={handleSubmit} className="notepad">
+      <form onSubmit={handleSubmit(onSubmit)} className="notepad">
         <div className="top">
           <h1 className="text-center text-4xl text-gray-300">
             Task.Me---Register
@@ -46,34 +44,30 @@ const Register = () => {
         <div className="paper">
           <input
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            {...register("username", { required: true })}
             placeholder="Username"
-            required
+            
           />
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            {...register("email", { required: true })}
             placeholder="Email"
-            required
           />
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            {...register("password", { required: true })}
             placeholder="Password"
-            required
           />
         </div>
 
         <motion.button
           type="submit"
-          className="flex w-full items-center justify-center bg-white text-2xl"
+          className="relative flex w-full items-center justify-center bg-white text-2xl"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           transition={{ duration: 0.3 }}
         >
+          {loading && <div className="loader absolute" />}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
