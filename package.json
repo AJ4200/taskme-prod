@@ -9,7 +9,7 @@
     "db:studio": "prisma studio",
     "db:format": "prisma format",
     "db:pull": "prisma db pull",
-    "db:generate": "prisma generate",
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start"
