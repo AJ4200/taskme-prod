@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { useRouter } from "next/router";
-import { FaArrowLeft, FaGithub, FaHandPointLeft, FaLinkedin, FaRegHandPointDown } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaRegHandPointDown } from "react-icons/fa";
 
 const Homepage: React.FC = () => {
   const router = useRouter();
@@ -61,11 +61,10 @@ const tokenCookie = sessionStorage.getItem("token");
             </div>{" "}
             <a href="/">
               <h1 className="text-center text-4xl text-gray-300">
-                Task.Me<span className="text-xs">alpha</span>
+                Task.Me<span className="text-xs">alpha 1.2</span>
               </h1>
             </a>
           </div>
-
         </div>
       </div>
       <div className="paper">
@@ -76,9 +75,9 @@ const tokenCookie = sessionStorage.getItem("token");
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleLoginClick}
-              className="ml-8 underline underline-offset-[10px]"
+              className="ml-8 flex flex-col items-center underline underline-offset-[10px]"
             >
-              <FaRegHandPointDown /> Login
+               <FaRegHandPointDown />Login
             </motion.button>
           </div>
           <br />
@@ -95,7 +94,7 @@ const tokenCookie = sessionStorage.getItem("token");
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleRegisterClick}
-              className="ml-8 underline underline-offset-[10px]"
+              className="ml-8 flex flex-col items-center underline underline-offset-[10px]"
             >
               <FaRegHandPointDown /> Register
             </motion.button>
