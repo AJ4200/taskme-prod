@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import useGetAllTasks from "~/hooks/task/useGetAllTasks";
 import Task from "~/models/task.model";

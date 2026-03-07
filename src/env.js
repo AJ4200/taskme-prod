@@ -9,9 +9,9 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z
       .string()
-      .url()
+      .min(1)
       .refine(
-        (str) => !str.includes("YOUR_MYSQL_URL_HERE"),
+        (str) => !str.includes("YOUR_DATABASE_URL_HERE"),
         "You forgot to change the default URL",
       ),
     NODE_ENV: z

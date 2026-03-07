@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import OwnedTasks from "./OwnedTasks";
 import AssignedTasks from "./AssignedTasks";
