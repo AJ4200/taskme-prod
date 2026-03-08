@@ -17,6 +17,35 @@ interface TaskActionResult<T> {
   error?: string;
 }
 
+const taskInclude = {
+  owner: {
+    select: {
+      id: true,
+      username: true,
+      email: true,
+    },
+  },
+  assignee: {
+    select: {
+      id: true,
+      username: true,
+      email: true,
+    },
+  },
+  goalLinks: {
+    include: {
+      goal: {
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          progress: true,
+        },
+      },
+    },
+  },
+} as const;
+
 export async function getAllTasksAction(
   ownerId?: string,
   assigneeId?: string,
@@ -27,6 +56,7 @@ export async function getAllTasksAction(
         ownerId: ownerId || undefined,
         assigneeId: assigneeId || undefined,
       },
+      include: taskInclude,
       orderBy: { dueDate: "asc" },
     });
 
@@ -41,7 +71,10 @@ export async function getTaskAction(
   taskId: string,
 ): Promise<TaskActionResult<any>> {
   try {
-    const task = await db.task.findUnique({ where: { id: taskId } });
+    const task = await db.task.findUnique({
+      where: { id: taskId },
+      include: taskInclude,
+    });
 
     if (!task) {
       return { success: false, error: "Task not found" };
@@ -73,6 +106,7 @@ export async function createTaskAction(
         ownerId,
         assigneeId: assigneeId ?? ownerId,
       },
+      include: taskInclude,
     });
 
     return { success: true, data: createdTask };
@@ -101,6 +135,7 @@ export async function updateTaskAction(
         ownerId: taskData.ownerId,
         assigneeId: taskData.assigneeId,
       },
+      include: taskInclude,
     });
 
     return { success: true, data: updatedTask };

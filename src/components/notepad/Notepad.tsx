@@ -1,37 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import OwnedTasks from "./OwnedTasks";
-import AssignedTasks from "./AssignedTasks";
-import TaskModal from "./TaskModal";
 import AccountabilityBoard from "./AccountabilityBoard";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FaGithub, FaLinkedin, FaTasks, FaUserFriends } from "react-icons/fa";
 import ProfileOptions from "./ProfileOptions";
+import TasksBoard from "./TasksBoard";
 
 const Notepad: React.FC = () => {
   const [view, setView] = useState<"tasks" | "accountability">("tasks");
-  const [isOwnedTasks, setOwnedTasks] = useState<boolean>(false);
-  const [isTaskModalOpen, setTaskModalOpen] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [options, setOptions] = useState(false);
 
   useEffect(() => {
     setUsername(sessionStorage.getItem("username"));
   }, []);
-
-  const handleToggle = () => {
-    setOwnedTasks(!isOwnedTasks);
-  };
-
-  const handleOpenTaskModal = () => {
-    setTaskModalOpen(true);
-  };
-
-  const handleCloseTaskModal = () => {
-    setTaskModalOpen(false);
-  };
 
   return (
     <div className="notepad">
@@ -57,14 +41,6 @@ const Notepad: React.FC = () => {
                 <FaUserFriends className="text-sm" />
                 Partners
               </button>
-              {view === "tasks" && (
-                <button
-                  className="box bg-gray-100 px-3"
-                  onClick={handleToggle}
-                >
-                  {isOwnedTasks ? "Assigned" : "Owned"}
-                </button>
-              )}
             </div>
           ) : (
             <Link className="flip m-2" href="/register">
@@ -130,22 +106,11 @@ const Notepad: React.FC = () => {
       {options && <ProfileOptions />}
       <div className="paper">
         {view === "tasks" ? (
-          <>
-            <button className="box p-2 font-bold" onClick={handleOpenTaskModal}>
-              Create Task
-            </button>
-            {isOwnedTasks ? <OwnedTasks /> : <AssignedTasks />}
-          </>
+          <TasksBoard onOpenAccountability={() => setView("accountability")} />
         ) : (
           <AccountabilityBoard />
         )}
       </div>
-      {isTaskModalOpen && (
-        <TaskModal
-          isOpen={isTaskModalOpen}
-          onRequestClose={handleCloseTaskModal}
-        />
-      )}
     </div>
   );
 };
