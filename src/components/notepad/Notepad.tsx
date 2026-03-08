@@ -4,12 +4,14 @@ import React, { useEffect, useState } from "react";
 import OwnedTasks from "./OwnedTasks";
 import AssignedTasks from "./AssignedTasks";
 import TaskModal from "./TaskModal";
+import AccountabilityBoard from "./AccountabilityBoard";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaTasks, FaUserFriends } from "react-icons/fa";
 import ProfileOptions from "./ProfileOptions";
 
 const Notepad: React.FC = () => {
+  const [view, setView] = useState<"tasks" | "accountability">("tasks");
   const [isOwnedTasks, setOwnedTasks] = useState<boolean>(false);
   const [isTaskModalOpen, setTaskModalOpen] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
@@ -36,12 +38,34 @@ const Notepad: React.FC = () => {
       <div className="top">
         <div className="flex justify-between">
           {username ? (
-            <button
-              className="flip my-2 ml-2 h-[50%] w-[6rem] bg-gray-400 p-2"
-              onClick={handleToggle}
-            >
-              {isOwnedTasks ? "Assigned" : "Owned"}
-            </button>
+            <div className="my-2 ml-2 flex items-center gap-2">
+              <button
+                className={`box flex items-center gap-2 px-3 ${
+                  view === "tasks" ? "bg-amber-100" : "bg-gray-100"
+                }`}
+                onClick={() => setView("tasks")}
+              >
+                <FaTasks className="text-sm" />
+                Tasks
+              </button>
+              <button
+                className={`box flex items-center gap-2 px-3 ${
+                  view === "accountability" ? "bg-amber-100" : "bg-gray-100"
+                }`}
+                onClick={() => setView("accountability")}
+              >
+                <FaUserFriends className="text-sm" />
+                Partners
+              </button>
+              {view === "tasks" && (
+                <button
+                  className="box bg-gray-100 px-3"
+                  onClick={handleToggle}
+                >
+                  {isOwnedTasks ? "Assigned" : "Owned"}
+                </button>
+              )}
+            </div>
           ) : (
             <Link className="flip m-2" href="/register">
               Register
@@ -105,10 +129,16 @@ const Notepad: React.FC = () => {
       </div>
       {options && <ProfileOptions />}
       <div className="paper">
-        <button className="box p-2 font-bold" onClick={handleOpenTaskModal}>
-          Create Task
-        </button>
-        {isOwnedTasks ? <OwnedTasks /> : <AssignedTasks />}
+        {view === "tasks" ? (
+          <>
+            <button className="box p-2 font-bold" onClick={handleOpenTaskModal}>
+              Create Task
+            </button>
+            {isOwnedTasks ? <OwnedTasks /> : <AssignedTasks />}
+          </>
+        ) : (
+          <AccountabilityBoard />
+        )}
       </div>
       {isTaskModalOpen && (
         <TaskModal
