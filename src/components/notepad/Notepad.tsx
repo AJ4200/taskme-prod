@@ -7,6 +7,7 @@ import Link from "next/link";
 import { FaGithub, FaLinkedin, FaTasks, FaUserFriends } from "react-icons/fa";
 import ProfileOptions from "./ProfileOptions";
 import TasksBoard from "./TasksBoard";
+import multiavatar from '@multiavatar/multiavatar/esm'
 
 const Notepad: React.FC = () => {
   const [view, setView] = useState<"tasks" | "accountability">("tasks");
@@ -75,7 +76,7 @@ const Notepad: React.FC = () => {
             </Link>
           </div>
 
-          <div className="my-2 mr-2 flex">
+          <div className="my-2 mr-2 flex items-center">
             {username ? (
               <motion.button
                 type="button"
@@ -89,10 +90,9 @@ const Notepad: React.FC = () => {
                 <p className="mr-2 mt-2 text-lg font-bold text-gray-200">
                   {username}
                 </p>
-                <img
-                  className="w-10 rounded-full object-cover"
-                  src={`https://api.multiavatar.com/${username}.svg`}
-                  alt={`${username} avatar`}
+                <svg
+                  className="w-8 h-8 rounded-full object-cover"
+                  dangerouslySetInnerHTML={{ __html: multiavatar(username || '') }}
                 />
               </motion.button>
             ) : (
