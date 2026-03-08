@@ -1,28 +1,27 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaGithub, FaLinkedin, FaRegHandPointDown } from "react-icons/fa";
 
 const Homepage: React.FC = () => {
   const router = useRouter();
-  const controls = useAnimation();
 
   useEffect(() => {
-    const tokenCookie = sessionStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
+    const userId = sessionStorage.getItem("userId");
 
-    if (tokenCookie) {
-      router.push("/tasks");
-    } else {
-      void controls.start({ opacity: 1, y: 0 });
+    if (token && userId) {
+      router.replace("/tasks");
     }
-  }, [router, controls]);
+  }, [router]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
-      animate={controls}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="notepad"
     >
@@ -48,11 +47,11 @@ const Homepage: React.FC = () => {
                 <FaLinkedin className="text-lg text-gray-300 hover:opacity-50" />
               </motion.a>
             </div>{" "}
-            <a href="/">
+            <Link href="/">
               <h1 className="text-center text-4xl text-gray-300">
                 Task.Me<span className="text-xs">alpha 1.2</span>
               </h1>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

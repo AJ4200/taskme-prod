@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
-import User from "~/models/user.model";
+import type User from "~/models/user.model";
+import { getUserByIdAction } from "~/actions/user";
 
 const useGetUserById = () => {
 const [user, setUser] = useState<User | null>(null);
@@ -12,11 +12,20 @@ const [user, setUser] = useState<User | null>(null);
 
   const getUserById = async (userId: string) => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await axios.get(`/api/user/getuserbyid?userId=${userId}`);
-      setUser(response.data);
-    } catch (error: any) {
-      setError(error.response?.data?.error || "An error occurred");
+      const result = await getUserByIdAction(userId);
+      if (!result.success) {
+        setError(result.error ?? "An error occurred");
+        setUser(null);
+        return;
+      }
+
+      setUser(result.data ?? null);
+    } catch (error) {
+      console.error(error);
+      setError("An error occurred");
+      setUser(null);
     } finally {
       setLoading(false);
     }

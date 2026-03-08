@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useGetAllTasks from "~/hooks/task/useGetAllTasks";
-import Task from "~/models/task.model";
+import type Task from "~/models/task.model";
 import AssignTask from "./AssignTask";
 import useGetUserById from "~/hooks/user/useGetUserById";
 

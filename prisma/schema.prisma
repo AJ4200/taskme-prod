@@ -7,23 +7,190 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum PartnershipKind {
+  FRIEND
+  ACCOUNTABILITY
+  PROFESSIONAL
+}
+
+enum PartnershipStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  ENDED
+  DECLINED
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  ARCHIVED
+}
+
+enum GoalCadence {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
 model Task {
   id         String   @id @default(cuid())
   title      String   @unique
   status     String
   priority   String
   dueDate    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
   owner      User     @relation("OwnerRelation", fields: [ownerId], references: [id])
   ownerId    String
   assignee   User     @relation("AssigneeRelation", fields: [assigneeId], references: [id])
   assigneeId String
+  goalLinks  GoalTask[]
 }
 
 model User {
-  id            String @id @default(cuid())
-  email         String @unique
-  username      String @unique
+  id            String       @id @default(cuid())
+  email         String       @unique
+  username      String       @unique
   password      String
   ownedTasks    Task[] @relation("OwnerRelation")
   assignedTasks Task[] @relation("AssigneeRelation")
+  goalsOwned           Goal[]         @relation("GoalOwner")
+  goalsAsPartner       Goal[]         @relation("GoalPartner")
+  sentFriendRequests   Friendship[]   @relation("FriendRequester")
+  receivedFriendRequests Friendship[] @relation("FriendAddressee")
+  initiatedPartnerships Partnership[] @relation("PartnershipInitiator")
+  receivedPartnerships  Partnership[] @relation("PartnershipPartner")
+  dailyCheckIns        DailyCheckIn[] @relation("CheckInUser")
+  partnerCheckIns      DailyCheckIn[] @relation("CheckInPartner")
+  weeklyReviews        WeeklyReview[] @relation("ReviewUser")
+  partnerWeeklyReviews WeeklyReview[] @relation("ReviewPartner")
+}
+
+model Friendship {
+  id         String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status     ConnectionStatus @default(PENDING)
+  message    String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  requester  User             @relation("FriendRequester", fields: [requesterId], references: [id])
+  addressee  User             @relation("FriendAddressee", fields: [addresseeId], references: [id])
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId, status])
+  @@index([addresseeId, status])
+}
+
+model Partnership {
+  id         String            @id @default(cuid())
+  initiatorId String
+  partnerId  String
+  kind       PartnershipKind   @default(ACCOUNTABILITY)
+  status     PartnershipStatus @default(PENDING)
+  notes      String?
+  startedAt  DateTime?
+  endedAt    DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  initiator  User              @relation("PartnershipInitiator", fields: [initiatorId], references: [id])
+  partner    User              @relation("PartnershipPartner", fields: [partnerId], references: [id])
+  goals      Goal[]            @relation("GoalPartnership")
+  checkIns   DailyCheckIn[]    @relation("CheckInPartnership")
+  weeklyReviews WeeklyReview[] @relation("ReviewPartnership")
+
+  @@unique([initiatorId, partnerId, kind])
+  @@index([initiatorId, status])
+  @@index([partnerId, status])
+}
+
+model Goal {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  ownerId       String
+  partnerId     String?
+  partnershipId String?
+  status        GoalStatus   @default(ACTIVE)
+  cadence       GoalCadence  @default(WEEKLY)
+  progress      Int          @default(0)
+  targetDate    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  owner         User         @relation("GoalOwner", fields: [ownerId], references: [id])
+  partner       User?        @relation("GoalPartner", fields: [partnerId], references: [id])
+  partnership   Partnership? @relation("GoalPartnership", fields: [partnershipId], references: [id])
+  goalTasks     GoalTask[]
+  checkIns      DailyCheckIn[]
+  weeklyReviews WeeklyReview[]
+
+  @@index([ownerId, status])
+  @@index([partnerId, status])
+}
+
+model GoalTask {
+  goalId     String
+  taskId     String
+  createdAt  DateTime @default(now())
+  goal       Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@id([goalId, taskId])
+}
+
+model DailyCheckIn {
+  id            String       @id @default(cuid())
+  userId        String
+  partnerId     String?
+  goalId        String?
+  partnershipId String?
+  checkInDate   DateTime
+  mood          String?
+  summary       String
+  wins          String?
+  blockers      String?
+  commitment    String?
+  progressScore Int?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  user          User         @relation("CheckInUser", fields: [userId], references: [id])
+  partner       User?        @relation("CheckInPartner", fields: [partnerId], references: [id])
+  goal          Goal?        @relation(fields: [goalId], references: [id])
+  partnership   Partnership? @relation("CheckInPartnership", fields: [partnershipId], references: [id])
+
+  @@index([userId, checkInDate])
+  @@index([goalId, checkInDate])
+}
+
+model WeeklyReview {
+  id              String       @id @default(cuid())
+  userId          String
+  partnerId       String?
+  goalId          String?
+  partnershipId   String?
+  weekStartDate   DateTime
+  wins            String?
+  challenges      String?
+  lessonsLearned  String?
+  nextWeekPlan    String?
+  completionScore Int?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation("ReviewUser", fields: [userId], references: [id])
+  partner         User?        @relation("ReviewPartner", fields: [partnerId], references: [id])
+  goal            Goal?        @relation(fields: [goalId], references: [id])
+  partnership     Partnership? @relation("ReviewPartnership", fields: [partnershipId], references: [id])
+
+  @@index([userId, weekStartDate])
+  @@index([goalId, weekStartDate])
 }

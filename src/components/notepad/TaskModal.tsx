@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import useCreateTask from "~/hooks/task/useCreateTask";
-import Task from "~/models/task.model";
+import type Task from "~/models/task.model";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -16,12 +16,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
   const [dueDate, setDueDate] = useState("");
 
   const { createTask, loading, error } = useCreateTask();
-
   const ownerId = sessionStorage.getItem("userId");
-  console.log("OwnerId:", ownerId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!ownerId) {
+      return;
+    }
 
     try {
       const newTask: Task = {
@@ -29,10 +31,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
         status,
         priority,
         dueDate: new Date(dueDate),
-        ownerId: ownerId || "",
-        assigneeId: "65857e398d21712cc0b34ef1",
+        ownerId,
+        assigneeId: ownerId,
       };
-      console.log(newTask);
+
       await createTask(newTask);
 
       setTitle("");
@@ -41,8 +43,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
       setDueDate("");
 
       onRequestClose();
-    } catch (error) {
-      console.error("Error creating task:", error);
+    } catch (createError) {
+      console.error("Error creating task:", createError);
     }
   };
 
@@ -53,10 +55,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
     >
       <form onSubmit={handleSubmit} className="notepad">
         <div className="top flex items-center justify-between">
-         <span className="text-sm text-gray-300 ">✒️</span> <h1 className="text-4xl text-gray-300 text-center">
-           Create Task
-          </h1>
+          <span className="px-2 text-sm text-gray-300">+</span>
+          <h1 className="text-center text-4xl text-gray-300">Create Task</h1>
           <button
+            type="button"
             className="text-8xl text-gray-500 hover:text-gray-700"
             onClick={onRequestClose}
           >
@@ -69,7 +71,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mb-4 w-full border px-3 py-2 border-b-inherit"
+            className="mb-4 w-full border border-b-inherit px-3 py-2"
             required
           />
 
@@ -102,12 +104,16 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
 
           <button
             type="submit"
-            className="flip opacity-70 text-white text-shadow text-lg"
+            className="flip text-lg text-white text-shadow opacity-70"
+            disabled={!ownerId}
           >
             {loading ? "Creating..." : "Create Task"}
           </button>
 
           {error && <p className="mt-2 text-red-500">{error}</p>}
+          {!ownerId && (
+            <p className="mt-2 text-red-500">You need to log in to create tasks.</p>
+          )}
         </div>
       </form>
     </dialog>

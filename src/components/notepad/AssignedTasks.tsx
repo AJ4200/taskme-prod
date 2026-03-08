@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import useGetAllTasks from "~/hooks/task/useGetAllTasks";
 import useGetUserById from "~/hooks/user/useGetUserById";
-import Task from "~/models/task.model";
-import User from "~/models/user.model";
+import type Task from "~/models/task.model";
 
 const AssignedTasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);

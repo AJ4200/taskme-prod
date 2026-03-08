@@ -1,36 +1,65 @@
 "use client";
 
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { IoMdPersonAdd } from "react-icons/io";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { registerAction } from "~/actions/auth";
+
+interface RegisterForm {
+  username: string;
+  email: string;
+  password: string;
+}
 
 export default function RegisterPage() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<RegisterForm>();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const onSubmit = async (data: any) => {
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const userId = sessionStorage.getItem("userId");
+
+    if (token && userId) {
+      router.replace("/tasks");
+      return;
+    }
+
+    setIsReady(true);
+  }, [router]);
+
+  const onSubmit = async (data: RegisterForm) => {
     try {
       setLoading(true);
-      const response = await axios.post("/api/auth/register", data);
-      const { token, user } = response.data;
+      setErrorMessage(null);
+      const result = await registerAction(data);
+      if (!result.success || !result.user || !result.token) {
+        setErrorMessage(result.error ?? "Registration failed. Please try again.");
+        return;
+      }
 
-      document.cookie = `token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict`;
-      sessionStorage.setItem("userId", response.data.user.id);
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("username", response.data.user.username);
+      const { user } = result;
+      sessionStorage.setItem("userId", result.user.id);
+      sessionStorage.setItem("token", result.token);
+      sessionStorage.setItem("username", result.user.username);
       console.log("Registration successful:", user);
 
       router.push("/tasks");
     } catch (error) {
+      setErrorMessage("Registration failed. Please try again.");
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!isReady) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
@@ -54,6 +83,7 @@ export default function RegisterPage() {
             {...register("password", { required: true })}
             placeholder="Password"
           />
+          {errorMessage && <p className="mt-2 text-red-600">{errorMessage}</p>}
         </div>
 
         <motion.button

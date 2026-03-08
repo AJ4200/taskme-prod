@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import { getAllTasksAction } from "~/actions/task";
 
 const useGetAllTasks = () => {
   const [loading, setLoading] = useState(false);
@@ -9,13 +9,19 @@ const useGetAllTasks = () => {
 
   const getAllTasks = async (ownerId?: string, assigneeId?: string) => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await axios.get("/api/task/getalltasks", {
-        params: { ownerId, assigneeId },
-      });
-      return response.data;
-    } catch (error: any) {
-      setError(error.response?.data?.error || "An error occurred");
+      const result = await getAllTasksAction(ownerId, assigneeId);
+      if (!result.success) {
+        setError(result.error ?? "An error occurred");
+        return [];
+      }
+
+      return result.data ?? [];
+    } catch (error) {
+      console.error(error);
+      setError("An error occurred");
+      return [];
     } finally {
       setLoading(false);
     }

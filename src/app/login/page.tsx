@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
-import axios from "axios";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { IoMdLogIn } from "react-icons/io";
 import { useRouter } from "next/navigation";
 import { type SubmitHandler, useForm } from "react-hook-form";
+import { loginAction } from "~/actions/auth";
 
 interface LoginForm {
   username: string;
@@ -20,17 +20,32 @@ export default function LoginPage() {
   } = useForm<LoginForm>();
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+  const [isReady, setIsReady] = React.useState(false);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const userId = sessionStorage.getItem("userId");
+
+    if (token && userId) {
+      router.replace("/tasks");
+      return;
+    }
+
+    setIsReady(true);
+  }, [router]);
 
   const onSubmit: SubmitHandler<LoginForm> = async (data) => {
     try {
       setLoading(true);
-      const response = await axios.post("/api/auth/login", data);
+      const result = await loginAction(data);
 
-      if (response.status === 200) {
-        sessionStorage.setItem("userId", response.data.user.id);
-        sessionStorage.setItem("token", response.data.token);
-        sessionStorage.setItem("username", response.data.user.username);
+      if (result.success && result.user && result.token) {
+        sessionStorage.setItem("userId", result.user.id);
+        sessionStorage.setItem("token", result.token);
+        sessionStorage.setItem("username", result.user.username);
         router.push("/tasks");
+      } else {
+        console.error(result.error ?? "Login failed");
       }
     } catch (error) {
       console.error(error);
@@ -38,6 +53,10 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (!isReady) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">

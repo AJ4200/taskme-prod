@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { Prisma } from "@prisma/client";
 import { db } from "~/server/db";
 import { env } from "~/env";
 
@@ -12,10 +13,34 @@ export async function POST(request: Request) {
       password?: string;
     };
 
-    if (!username || !email || !password) {
+    const normalizedUsername = username?.trim();
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedUsername || !normalizedEmail || !password) {
       return NextResponse.json(
         { error: "Username, email and password are required" },
         { status: 400 },
+      );
+    }
+
+    const existingUser = await db.user.findFirst({
+      where: {
+        OR: [{ username: normalizedUsername }, { email: normalizedEmail }],
+      },
+      select: { username: true, email: true },
+    });
+
+    if (existingUser) {
+      if (existingUser.username === normalizedUsername) {
+        return NextResponse.json(
+          { error: "Username is already taken" },
+          { status: 409 },
+        );
+      }
+
+      return NextResponse.json(
+        { error: "Email is already registered" },
+        { status: 409 },
       );
     }
 
@@ -23,8 +48,8 @@ export async function POST(request: Request) {
 
     const result = await db.user.create({
       data: {
-        username,
-        email,
+        username: normalizedUsername,
+        email: normalizedEmail,
         password: hashedPassword,
       },
     });
@@ -36,6 +61,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ token, user: result }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "Username or email already exists" },
+        { status: 409 },
+      );
+    }
+
+    const message =
+      env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : "Internal Server Error";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

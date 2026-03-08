@@ -1,19 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import OwnedTasks from "./OwnedTasks";
 import AssignedTasks from "./AssignedTasks";
 import TaskModal from "./TaskModal";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import ProfileOtions from "./ProfileOptions";
+import ProfileOptions from "./ProfileOptions";
 
 const Notepad: React.FC = () => {
   const [isOwnedTasks, setOwnedTasks] = useState<boolean>(false);
   const [isTaskModalOpen, setTaskModalOpen] = useState<boolean>(false);
-  const username =
-    typeof window !== "undefined" ? sessionStorage.getItem("username") : null;
+  const [username, setUsername] = useState<string | null>(null);
   const [options, setOptions] = useState(false);
+
+  useEffect(() => {
+    setUsername(sessionStorage.getItem("username"));
+  }, []);
+
   const handleToggle = () => {
     setOwnedTasks(!isOwnedTasks);
   };
@@ -38,9 +43,9 @@ const Notepad: React.FC = () => {
               {isOwnedTasks ? "Assigned" : "Owned"}
             </button>
           ) : (
-            <a className="flip m-2" href="/register">
+            <Link className="flip m-2" href="/register">
               Register
-            </a>
+            </Link>
           )}
 
           <div className="flex items-center">
@@ -63,36 +68,42 @@ const Notepad: React.FC = () => {
                 <FaLinkedin className="text-lg text-gray-300 hover:opacity-50" />
               </motion.a>
             </div>{" "}
-            <a href="/">
+            <Link href="/">
               <h1 className="text-center text-4xl text-gray-300">
                 Task.Me<span className="text-xs">alpha 1.2</span>
               </h1>
-            </a>
+            </Link>
           </div>
 
           <div className="my-2 mr-2 flex">
-            {username != null ? (
-              <motion.div className="flex"
+            {username ? (
+              <motion.button
+                type="button"
+                className="flex"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => {setOptions(!options)}}
+                onClick={() => {
+                  setOptions(!options);
+                }}
               >
                 <p className="mr-2 mt-2 text-lg font-bold text-gray-200">
                   {username}
                 </p>
                 <img
-                  className=" w-10 rounded-full object-cover"
+                  className="w-10 rounded-full object-cover"
                   src={`https://api.multiavatar.com/${username}.svg`}
+                  alt={`${username} avatar`}
                 />
-              </motion.div>
+              </motion.button>
             ) : (
-              <a className="flip" href="/login">
+              <Link className="flip" href="/login">
                 Login
-              </a>
+              </Link>
             )}
           </div>
         </div>
-      </div>  {options && <ProfileOtions/>}
+      </div>
+      {options && <ProfileOptions />}
       <div className="paper">
         <button className="box p-2 font-bold" onClick={handleOpenTaskModal}>
           Create Task
@@ -106,7 +117,6 @@ const Notepad: React.FC = () => {
         />
       )}
     </div>
-    
   );
 };
 

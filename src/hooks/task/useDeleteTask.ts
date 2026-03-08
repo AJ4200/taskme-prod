@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import { deleteTaskAction } from "~/actions/task";
 
 const useDeleteTask = () => {
   const [loading, setLoading] = useState(false);
@@ -9,10 +9,15 @@ const useDeleteTask = () => {
 
   const deleteTask = async (taskId: string) => {
     setLoading(true);
+    setError(null);
     try {
-      await axios.delete(`/api/task/deletetask/${taskId}`);
-    } catch (error: any) {
-      setError(error.response.data.error || "An error occurred");
+      const result = await deleteTaskAction(taskId);
+      if (!result.success) {
+        setError(result.error ?? "An error occurred");
+      }
+    } catch (error) {
+      console.error(error);
+      setError("An error occurred");
     } finally {
       setLoading(false);
     }

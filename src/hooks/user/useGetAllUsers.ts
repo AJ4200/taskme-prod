@@ -1,20 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+import { getAllUsersAction } from "~/actions/user";
+import type User from "~/models/user.model";
 
 const useGetAllUsers = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const getAllUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await axios.get("/api/user/getallusers");
-      setUsers(response.data);
-    } catch (error: any) {
-      setError(error.response?.data?.error || "An error occurred");
+      const result = await getAllUsersAction();
+      if (!result.success) {
+        setError(result.error ?? "An error occurred");
+        setUsers([]);
+        return;
+      }
+
+      setUsers((result.data as User[] | undefined) ?? []);
+    } catch (error) {
+      console.error(error);
+      setError("An error occurred");
+      setUsers([]);
     } finally {
       setLoading(false);
     }

@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import useGetAllUsers from "~/hooks/user/useGetAllUsers";
 import useUpdateTask from "~/hooks/task/useUpdateTask";
-import User from "~/models/user.model";
-import Task from "~/models/task.model";
+import type User from "~/models/user.model";
+import type Task from "~/models/task.model";
 
 interface AssignTaskProps {
   task: Task | null;
