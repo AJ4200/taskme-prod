@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import "~/styles/splash.css";
 import "~/styles/notepad.scss";
 import Footer from "~/components/Footer";
+import AppProviders from "~/components/providers/AppProviders";
 
 export const metadata: Metadata = {
   title: "Task.Me",
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
-        <Footer />
+        <AppProviders>
+          {children}
+          <Footer />
+        </AppProviders>
       </body>
     </html>
   );

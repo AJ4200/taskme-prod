@@ -4,22 +4,73 @@ import React, { useEffect, useState } from "react";
 import AccountabilityBoard from "./AccountabilityBoard";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaGithub, FaLinkedin, FaTasks, FaUserFriends } from "react-icons/fa";
+import { FaBell, FaGithub, FaLinkedin, FaTasks, FaUserFriends } from "react-icons/fa";
 import ProfileOptions from "./ProfileOptions";
 import TasksBoard from "./TasksBoard";
-import multiavatar from '@multiavatar/multiavatar/esm'
+import multiavatar from "@multiavatar/multiavatar/esm";
+import InboxBoard from "./InboxBoard";
+import { listFriendConnectionsAction } from "~/actions/accountability";
+import { getAllTasksAction } from "~/actions/task";
 
 const Notepad: React.FC = () => {
-  const [view, setView] = useState<"tasks" | "accountability">("tasks");
+  const [view, setView] = useState<"tasks" | "accountability" | "inbox">("tasks");
   const [username, setUsername] = useState<string | null>(null);
   const [options, setOptions] = useState(false);
+  const [alertText, setAlertText] = useState("");
 
   useEffect(() => {
     setUsername(sessionStorage.getItem("username"));
   }, []);
 
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) return;
+
+    const poll = async () => {
+      const [friendResult, taskResult] = await Promise.all([
+        listFriendConnectionsAction(userId),
+        getAllTasksAction(undefined, userId),
+      ]);
+
+      const incomingRequests = friendResult.success
+        ? (
+            ((friendResult.data as Array<{ status: string; isIncoming: boolean }> | undefined) ??
+              []
+            ).filter((row) => row.status === "PENDING" && row.isIncoming).length
+          )
+        : 0;
+
+      const assignedTasks = taskResult.success
+        ? (
+            ((taskResult.data as Array<{ ownerId: string; assigneeId: string }> | undefined) ??
+              []
+            ).filter((task) => task.ownerId !== task.assigneeId).length
+          )
+        : 0;
+
+      const nextAlertParts: string[] = [];
+      if (incomingRequests > 0) {
+        nextAlertParts.push(
+          `${incomingRequests} friend request${incomingRequests > 1 ? "s" : ""} waiting`,
+        );
+      }
+      if (assignedTasks > 0) {
+        nextAlertParts.push(
+          `${assignedTasks} assigned task${assignedTasks > 1 ? "s" : ""} in your inbox`,
+        );
+      }
+      setAlertText(nextAlertParts.join(" | "));
+    };
+
+    void poll();
+    const intervalId = window.setInterval(() => void poll(), 15000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   return (
-    <div className="notepad">
+    <div className="notepad relative">
       <div className="top">
         <div className="flex justify-between">
           {username ? (
@@ -35,12 +86,12 @@ const Notepad: React.FC = () => {
               </button>
               <button
                 className={`box flex items-center gap-2 px-3 ${
-                  view === "accountability" ? "bg-amber-100" : "bg-gray-100"
+                  view === "inbox" ? "bg-amber-100" : "bg-gray-100"
                 }`}
-                onClick={() => setView("accountability")}
+                onClick={() => setView("inbox")}
               >
-                <FaUserFriends className="text-sm" />
-                Partners
+                <FaBell className="text-sm" />
+                Inbox
               </button>
             </div>
           ) : (
@@ -92,7 +143,7 @@ const Notepad: React.FC = () => {
                 </p>
                 <svg
                   className="w-8 h-8 rounded-full object-cover"
-                  dangerouslySetInnerHTML={{ __html: multiavatar(username || '') }}
+                  dangerouslySetInnerHTML={{ __html: multiavatar(username || "") }}
                 />
               </motion.button>
             ) : (
@@ -107,9 +158,14 @@ const Notepad: React.FC = () => {
       <div className="paper">
         {view === "tasks" ? (
           <TasksBoard onOpenAccountability={() => setView("accountability")} />
-        ) : (
+        ) : view === "accountability" ? (
           <AccountabilityBoard />
+        ) : (
+          <InboxBoard />
         )}
+      </div>
+      <div className="pointer-events-none absolute bottom-2 right-3 min-h-5 bg-transparent text-right text-xs text-red-700">
+        {alertText && <p>{alertText}</p>}
       </div>
     </div>
   );

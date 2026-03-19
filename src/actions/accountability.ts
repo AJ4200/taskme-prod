@@ -8,6 +8,7 @@ import {
   type PartnershipStatus,
 } from "@prisma/client";
 import { db } from "~/server/db";
+import { createNotificationAction } from "./social";
 
 interface ActionResult<T> {
   success: boolean;
@@ -193,6 +194,14 @@ export async function sendFriendRequestAction(
       },
     });
 
+    await createNotificationAction({
+      userId: addresseeId,
+      type: "FRIEND_REQUEST",
+      title: "New friend request",
+      body: "You received a new friend request.",
+      link: "/tasks",
+    });
+
     return { success: true, data: request };
   } catch (error) {
     console.error(error);
@@ -228,6 +237,16 @@ export async function respondFriendRequestAction(
       where: { id: input.friendshipId },
       data: { status: input.accept ? "ACCEPTED" : "DECLINED" },
     });
+
+    if (input.accept) {
+      await createNotificationAction({
+        userId: friendship.requesterId,
+        type: "FRIEND_REQUEST_ACCEPTED",
+        title: "Friend request accepted",
+        body: "Your friend request was accepted.",
+        link: "/tasks",
+      });
+    }
 
     return { success: true, data: updated };
   } catch (error) {

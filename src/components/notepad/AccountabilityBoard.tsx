@@ -28,6 +28,7 @@ import {
   updateGoalAction,
 } from "~/actions/accountability";
 import { getAllUsersAction, getUserByUsernameAction } from "~/actions/user";
+import { useNotifications } from "../providers/NotificationProvider";
 
 type Tab = "overview" | "friends" | "partners" | "goals" | "checkins" | "reviews";
 
@@ -105,6 +106,7 @@ const fmt = (value?: string | Date | null) =>
   value ? new Date(value).toLocaleDateString() : "-";
 
 const AccountabilityBoard: React.FC = () => {
+  const { success: notifySuccess, error: notifyError } = useNotifications();
   const [tab, setTab] = useState<Tab>("overview");
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -175,6 +177,14 @@ const AccountabilityBoard: React.FC = () => {
     }
     void refresh(uid);
   }, [refresh]);
+
+  useEffect(() => {
+    if (notice) notifySuccess(notice);
+  }, [notice, notifySuccess]);
+
+  useEffect(() => {
+    if (error) notifyError(error);
+  }, [error, notifyError]);
 
   const run = async (
     action: () => Promise<{ success: boolean; error?: string }>,

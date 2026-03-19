@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React from "react";
+import { setPendingNotification } from "../providers/NotificationProvider";
 
 const ProfileOptions: React.FC = () => {
   const router = useRouter();
@@ -11,6 +12,7 @@ const ProfileOptions: React.FC = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     sessionStorage.removeItem("email");
+    setPendingNotification("info", "You have been logged out.");
     router.replace("/");
   };
 

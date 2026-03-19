@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Notepad from "~/components/notepad/Notepad";
+import { setPendingNotification } from "~/components/providers/NotificationProvider";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function TasksPage() {
     const userId = sessionStorage.getItem("userId");
 
     if (!token || !userId) {
+      setPendingNotification("info", "Please log in to continue.");
       router.replace("/");
       return;
     }

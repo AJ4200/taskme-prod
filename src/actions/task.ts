@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "~/server/db";
+import { createNotificationAction } from "./social";
 
 interface TaskPayload {
   title: string;
@@ -109,6 +110,16 @@ export async function createTaskAction(
       include: taskInclude,
     });
 
+    if (createdTask.assigneeId && createdTask.assigneeId !== createdTask.ownerId) {
+      await createNotificationAction({
+        userId: createdTask.assigneeId,
+        type: "TASK_ASSIGNED",
+        title: "New task assigned",
+        body: `"${createdTask.title}" has been assigned to you.`,
+        link: "/tasks",
+      });
+    }
+
     return { success: true, data: createdTask };
   } catch (error) {
     console.error(error);
@@ -125,6 +136,15 @@ export async function updateTaskAction(
       return { success: false, error: "taskId is required" };
     }
 
+    const existingTask = await db.task.findUnique({
+      where: { id: taskId },
+      select: { title: true, assigneeId: true, ownerId: true },
+    });
+
+    if (!existingTask) {
+      return { success: false, error: "Task not found" };
+    }
+
     const updatedTask = await db.task.update({
       where: { id: taskId },
       data: {
@@ -137,6 +157,34 @@ export async function updateTaskAction(
       },
       include: taskInclude,
     });
+
+    if (
+      taskData.assigneeId &&
+      taskData.assigneeId !== existingTask.assigneeId &&
+      taskData.assigneeId !== existingTask.ownerId
+    ) {
+      await createNotificationAction({
+        userId: taskData.assigneeId,
+        type: "TASK_ASSIGNED",
+        title: "Task assigned to you",
+        body: `"${updatedTask.title}" has been assigned to you.`,
+        link: "/tasks",
+      });
+    } else if (
+      updatedTask.assigneeId &&
+      updatedTask.assigneeId !== updatedTask.ownerId &&
+      (taskData.status !== undefined ||
+        taskData.priority !== undefined ||
+        taskData.dueDate !== undefined)
+    ) {
+      await createNotificationAction({
+        userId: updatedTask.assigneeId,
+        type: "TASK_UPDATED",
+        title: "Assigned task updated",
+        body: `Task "${updatedTask.title}" has new updates.`,
+        link: "/tasks",
+      });
+    }
 
     return { success: true, data: updatedTask };
   } catch (error) {

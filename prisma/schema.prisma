@@ -42,6 +42,16 @@ enum GoalCadence {
   CUSTOM
 }
 
+enum NotificationType {
+  SYSTEM
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  TASK_ASSIGNED
+  TASK_UPDATED
+  TASK_DUE_SOON
+  MESSAGE
+}
+
 model Task {
   id         String   @id @default(cuid())
   title      String   @unique
@@ -74,6 +84,9 @@ model User {
   partnerCheckIns      DailyCheckIn[] @relation("CheckInPartner")
   weeklyReviews        WeeklyReview[] @relation("ReviewUser")
   partnerWeeklyReviews WeeklyReview[] @relation("ReviewPartner")
+  notifications        Notification[]
+  sentMessages         Message[]      @relation("MessageSender")
+  receivedMessages     Message[]      @relation("MessageRecipient")
 }
 
 model Friendship {
@@ -193,4 +206,34 @@ model WeeklyReview {
 
   @@index([userId, weekStartDate])
   @@index([goalId, weekStartDate])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(SYSTEM)
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  recipientId String
+  content     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, isRead, createdAt])
 }

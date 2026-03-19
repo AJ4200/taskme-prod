@@ -23,6 +23,7 @@ import {
   updateTaskAction,
 } from "~/actions/task";
 import { getAllUsersAction } from "~/actions/user";
+import { useNotifications } from "../providers/NotificationProvider";
 import type Task from "~/models/task.model";
 
 type TaskScope = "owned" | "assigned";
@@ -89,6 +90,7 @@ const isCompletedStatus = (status: string) => {
 };
 
 const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
+  const { success: notifySuccess, error: notifyError } = useNotifications();
   const [scope, setScope] = useState<TaskScope>("owned");
   const [userId, setUserId] = useState("");
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -158,6 +160,14 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
     if (!userId) return;
     void refresh(userId, scope);
   }, [refresh, scope, userId]);
+
+  useEffect(() => {
+    if (notice) notifySuccess(notice);
+  }, [notice, notifySuccess]);
+
+  useEffect(() => {
+    if (error) notifyError(error);
+  }, [error, notifyError]);
 
   const resetMessages = () => {
     setNotice(null);

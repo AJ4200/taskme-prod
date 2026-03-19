@@ -56,28 +56,38 @@ const Homepage: React.FC = () => {
         </div>
       </div>
       <div className="paper">
-        <h1 className="mb-10 text-center text-6xl underline">Welcome!!!</h1>
+        <h1 className="mb-2 text-center text-6xl underline">Welcome to Task.Me</h1>
+        <p className="mb-4 text-center text-xl font-semibold">
+          Plan quickly, execute daily, and keep your goals visible.
+        </p>
+        <div className="mb-4 rounded border border-gray-700/30 p-3 text-base leading-8">
+          <p>- Capture tasks in seconds</p>
+          <p>- Organize personal and shared work</p>
+          <p>- Stay accountable with a focused board</p>
+        </div>
         <div className="flex justify-evenly">
           <div>
-            <p className="mb-4 text-lg font-semibold">Get to tasking</p>
+            <p className="mb-2 text-lg font-semibold">Returning user?</p>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => router.push("/login")}
               className="ml-8 flex flex-col items-center underline underline-offset-[10px]"
             >
-              <FaRegHandPointDown />Login
+              <FaRegHandPointDown />
+              Login
             </motion.button>
           </div>
           <div>
-            <p className="mb-4 text-lg font-semibold">New to Task.Me?</p>
+            <p className="mb-2 text-lg font-semibold">First time here?</p>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => router.push("/register")}
               className="ml-8 flex flex-col items-center underline underline-offset-[10px]"
             >
-              <FaRegHandPointDown /> Register
+              <FaRegHandPointDown />
+              Register
             </motion.button>
           </div>
         </div>
