@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -52,53 +52,67 @@ enum NotificationType {
   MESSAGE
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model Task {
-  id         String   @id @default(cuid())
-  title      String   @unique
-  status     String
-  priority   String
+  id         String       @id @default(cuid())
+  title      String       @unique
+  status     TaskStatus   @default(TODO)
+  priority   TaskPriority @default(MEDIUM)
   dueDate    DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
-  owner      User     @relation("OwnerRelation", fields: [ownerId], references: [id])
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now()) @updatedAt
+  owner      User         @relation("OwnerRelation", fields: [ownerId], references: [id])
   ownerId    String
-  assignee   User     @relation("AssigneeRelation", fields: [assigneeId], references: [id])
+  assignee   User         @relation("AssigneeRelation", fields: [assigneeId], references: [id])
   assigneeId String
   goalLinks  GoalTask[]
 }
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  username      String       @unique
-  password      String
-  ownedTasks    Task[] @relation("OwnerRelation")
-  assignedTasks Task[] @relation("AssigneeRelation")
-  goalsOwned           Goal[]         @relation("GoalOwner")
-  goalsAsPartner       Goal[]         @relation("GoalPartner")
-  sentFriendRequests   Friendship[]   @relation("FriendRequester")
-  receivedFriendRequests Friendship[] @relation("FriendAddressee")
-  initiatedPartnerships Partnership[] @relation("PartnershipInitiator")
-  receivedPartnerships  Partnership[] @relation("PartnershipPartner")
-  dailyCheckIns        DailyCheckIn[] @relation("CheckInUser")
-  partnerCheckIns      DailyCheckIn[] @relation("CheckInPartner")
-  weeklyReviews        WeeklyReview[] @relation("ReviewUser")
-  partnerWeeklyReviews WeeklyReview[] @relation("ReviewPartner")
-  notifications        Notification[]
-  sentMessages         Message[]      @relation("MessageSender")
-  receivedMessages     Message[]      @relation("MessageRecipient")
+  id                     String         @id @default(cuid())
+  email                  String         @unique
+  username               String         @unique
+  password               String
+  ownedTasks             Task[]         @relation("OwnerRelation")
+  assignedTasks          Task[]         @relation("AssigneeRelation")
+  goalsOwned             Goal[]         @relation("GoalOwner")
+  goalsAsPartner         Goal[]         @relation("GoalPartner")
+  sentFriendRequests     Friendship[]   @relation("FriendRequester")
+  receivedFriendRequests Friendship[]   @relation("FriendAddressee")
+  initiatedPartnerships  Partnership[]  @relation("PartnershipInitiator")
+  receivedPartnerships   Partnership[]  @relation("PartnershipPartner")
+  dailyCheckIns          DailyCheckIn[] @relation("CheckInUser")
+  partnerCheckIns        DailyCheckIn[] @relation("CheckInPartner")
+  weeklyReviews          WeeklyReview[] @relation("ReviewUser")
+  partnerWeeklyReviews   WeeklyReview[] @relation("ReviewPartner")
+  notifications          Notification[]
+  sentMessages           Message[]      @relation("MessageSender")
+  receivedMessages       Message[]      @relation("MessageRecipient")
 }
 
 model Friendship {
-  id         String           @id @default(cuid())
+  id          String           @id @default(cuid())
   requesterId String
   addresseeId String
-  status     ConnectionStatus @default(PENDING)
-  message    String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  requester  User             @relation("FriendRequester", fields: [requesterId], references: [id])
-  addressee  User             @relation("FriendAddressee", fields: [addresseeId], references: [id])
+  status      ConnectionStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  requester   User             @relation("FriendRequester", fields: [requesterId], references: [id])
+  addressee   User             @relation("FriendAddressee", fields: [addresseeId], references: [id])
 
   @@unique([requesterId, addresseeId])
   @@index([requesterId, status])
@@ -106,21 +120,21 @@ model Friendship {
 }
 
 model Partnership {
-  id         String            @id @default(cuid())
-  initiatorId String
-  partnerId  String
-  kind       PartnershipKind   @default(ACCOUNTABILITY)
-  status     PartnershipStatus @default(PENDING)
-  notes      String?
-  startedAt  DateTime?
-  endedAt    DateTime?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  initiator  User              @relation("PartnershipInitiator", fields: [initiatorId], references: [id])
-  partner    User              @relation("PartnershipPartner", fields: [partnerId], references: [id])
-  goals      Goal[]            @relation("GoalPartnership")
-  checkIns   DailyCheckIn[]    @relation("CheckInPartnership")
-  weeklyReviews WeeklyReview[] @relation("ReviewPartnership")
+  id            String            @id @default(cuid())
+  initiatorId   String
+  partnerId     String
+  kind          PartnershipKind   @default(ACCOUNTABILITY)
+  status        PartnershipStatus @default(PENDING)
+  notes         String?
+  startedAt     DateTime?
+  endedAt       DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  initiator     User              @relation("PartnershipInitiator", fields: [initiatorId], references: [id])
+  partner       User              @relation("PartnershipPartner", fields: [partnerId], references: [id])
+  goals         Goal[]            @relation("GoalPartnership")
+  checkIns      DailyCheckIn[]    @relation("CheckInPartnership")
+  weeklyReviews WeeklyReview[]    @relation("ReviewPartnership")
 
   @@unique([initiatorId, partnerId, kind])
   @@index([initiatorId, status])
@@ -128,21 +142,21 @@ model Partnership {
 }
 
 model Goal {
-  id            String       @id @default(cuid())
+  id            String         @id @default(cuid())
   title         String
   description   String?
   ownerId       String
   partnerId     String?
   partnershipId String?
-  status        GoalStatus   @default(ACTIVE)
-  cadence       GoalCadence  @default(WEEKLY)
-  progress      Int          @default(0)
+  status        GoalStatus     @default(ACTIVE)
+  cadence       GoalCadence    @default(WEEKLY)
+  progress      Int            @default(0)
   targetDate    DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  owner         User         @relation("GoalOwner", fields: [ownerId], references: [id])
-  partner       User?        @relation("GoalPartner", fields: [partnerId], references: [id])
-  partnership   Partnership? @relation("GoalPartnership", fields: [partnershipId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  owner         User           @relation("GoalOwner", fields: [ownerId], references: [id])
+  partner       User?          @relation("GoalPartner", fields: [partnerId], references: [id])
+  partnership   Partnership?   @relation("GoalPartnership", fields: [partnershipId], references: [id])
   goalTasks     GoalTask[]
   checkIns      DailyCheckIn[]
   weeklyReviews WeeklyReview[]
@@ -152,11 +166,11 @@ model Goal {
 }
 
 model GoalTask {
-  goalId     String
-  taskId     String
-  createdAt  DateTime @default(now())
-  goal       Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  goalId    String
+  taskId    String
+  createdAt DateTime @default(now())
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@id([goalId, taskId])
 }

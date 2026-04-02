@@ -1,5 +1,6 @@
 "use server";
 
+import type { ConnectionStatus, NotificationType } from "@prisma/client";
 import { db } from "~/server/db";
 
 interface ActionResult<T> {
@@ -10,7 +11,7 @@ interface ActionResult<T> {
 
 interface CreateNotificationInput {
   userId: string;
-  type?: string;
+  type?: NotificationType;
   title: string;
   body?: string;
   link?: string;
@@ -22,8 +23,7 @@ interface SendMessageInput {
   content: string;
 }
 
-const hasMessageDelegate = () =>
-  Boolean((db as unknown as { message?: { findMany?: unknown } }).message?.findMany);
+const hasMessageDelegate = () => Boolean(db.message?.findMany);
 
 export async function createNotificationAction(
   input: CreateNotificationInput,
@@ -38,7 +38,7 @@ export async function createNotificationAction(
     const notification = await db.notification.create({
       data: {
         userId,
-        type: (input.type ?? "SYSTEM") as any,
+        type: input.type ?? "SYSTEM",
         title,
         body: input.body?.trim() || undefined,
         link: input.link?.trim() || undefined,
@@ -137,7 +137,7 @@ export async function sendMessageAction(
 
     const friendship = await db.friendship.findFirst({
       where: {
-        status: "ACCEPTED",
+        status: "ACCEPTED" satisfies ConnectionStatus,
         OR: [
           { requesterId: senderId, addresseeId: recipientId },
           { requesterId: recipientId, addresseeId: senderId },
@@ -150,18 +150,16 @@ export async function sendMessageAction(
       return { success: false, error: "You can only message accepted friends" };
     }
 
-    let message:
-      | {
-          id: string;
-          senderId: string;
-          recipientId: string;
-          content: string;
-          sender: { id: string; username: string };
-        }
-      | undefined;
+    let message: {
+      id: string;
+      senderId: string;
+      recipientId: string;
+      content: string;
+      sender: { id: string; username: string };
+    };
 
     if (hasMessageDelegate()) {
-      const created = await (db as any).message.create({
+      const created = await db.message.create({
         data: {
           senderId,
           recipientId,
@@ -172,7 +170,13 @@ export async function sendMessageAction(
           recipient: { select: { id: true, username: true } },
         },
       });
-      message = created;
+      message = {
+        id: created.id,
+        senderId: created.senderId,
+        recipientId: created.recipientId,
+        content: created.content,
+        sender: created.sender,
+      };
     } else {
       const insertedId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       await db.$executeRawUnsafe(
@@ -199,7 +203,7 @@ export async function sendMessageAction(
 
     await createNotificationAction({
       userId: recipientId,
-      type: "MESSAGE",
+      type: "MESSAGE" satisfies NotificationType,
       title: `New message from ${message.sender.username}`,
       body: content.length > 90 ? `${content.slice(0, 90)}...` : content,
       link: "/tasks",
@@ -222,7 +226,7 @@ export async function listConversationAction(
     }
 
     if (hasMessageDelegate()) {
-      const messages = await (db as any).message.findMany({
+      const messages = await db.message.findMany({
         where: {
           OR: [
             { senderId: userId, recipientId: friendId },
@@ -237,7 +241,7 @@ export async function listConversationAction(
         },
       });
 
-      await (db as any).message.updateMany({
+      await db.message.updateMany({
         where: {
           senderId: friendId,
           recipientId: userId,

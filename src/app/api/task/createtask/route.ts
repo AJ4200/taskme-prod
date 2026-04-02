@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { TaskPriority, TaskStatus } from "@prisma/client";
 import { db } from "~/server/db";
 
 export async function POST(request: Request) {
@@ -6,8 +7,8 @@ export async function POST(request: Request) {
     const { title, status, priority, dueDate, ownerId, assigneeId } =
       (await request.json()) as {
         title?: string;
-        status?: string;
-        priority?: string;
+        status?: TaskStatus;
+        priority?: TaskPriority;
         dueDate?: string;
         ownerId?: string;
         assigneeId?: string;

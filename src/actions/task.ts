@@ -1,12 +1,13 @@
 "use server";
 
+import type { NotificationType, TaskPriority, TaskStatus } from "@prisma/client";
 import { db } from "~/server/db";
 import { createNotificationAction } from "./social";
 
 interface TaskPayload {
   title: string;
-  status: string;
-  priority: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   dueDate: string | Date;
   ownerId: string;
   assigneeId?: string;
@@ -113,7 +114,7 @@ export async function createTaskAction(
     if (createdTask.assigneeId && createdTask.assigneeId !== createdTask.ownerId) {
       await createNotificationAction({
         userId: createdTask.assigneeId,
-        type: "TASK_ASSIGNED",
+        type: "TASK_ASSIGNED" satisfies NotificationType,
         title: "New task assigned",
         body: `"${createdTask.title}" has been assigned to you.`,
         link: "/tasks",
@@ -165,7 +166,7 @@ export async function updateTaskAction(
     ) {
       await createNotificationAction({
         userId: taskData.assigneeId,
-        type: "TASK_ASSIGNED",
+        type: "TASK_ASSIGNED" satisfies NotificationType,
         title: "Task assigned to you",
         body: `"${updatedTask.title}" has been assigned to you.`,
         link: "/tasks",
@@ -179,7 +180,7 @@ export async function updateTaskAction(
     ) {
       await createNotificationAction({
         userId: updatedTask.assigneeId,
-        type: "TASK_UPDATED",
+        type: "TASK_UPDATED" satisfies NotificationType,
         title: "Assigned task updated",
         body: `Task "${updatedTask.title}" has new updates.`,
         link: "/tasks",
