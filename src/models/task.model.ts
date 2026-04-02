@@ -1,3 +1,5 @@
+import type { GoalStatus, TaskPriority, TaskStatus } from "@prisma/client";
+
 // task.model.ts
 
 export interface TaskGoalLink {
@@ -5,7 +7,7 @@ export interface TaskGoalLink {
   goal?: {
     id: string;
     title: string;
-    status?: string;
+    status?: GoalStatus;
     progress?: number;
   } | null;
 }
@@ -13,8 +15,8 @@ export interface TaskGoalLink {
 interface Task {
   id?: string;
   title: string;
-  status: string;
-  priority: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   dueDate: Date | string;
   ownerId: string;
   assigneeId?: string;

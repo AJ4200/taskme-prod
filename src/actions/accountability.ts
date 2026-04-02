@@ -6,6 +6,7 @@ import {
   type GoalStatus,
   type PartnershipKind,
   type PartnershipStatus,
+  type TaskStatus,
 } from "@prisma/client";
 import { db } from "~/server/db";
 import { createNotificationAction } from "./social";
@@ -771,12 +772,7 @@ export async function getAccountabilityOverviewAction(
       db.task.count({
         where: {
           ownerId: userId,
-          OR: [
-            { status: "completed" },
-            { status: "Completed" },
-            { status: "done" },
-            { status: "Done" },
-          ],
+          status: "COMPLETED" satisfies TaskStatus,
         },
       }),
     ]);

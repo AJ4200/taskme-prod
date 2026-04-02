@@ -2,7 +2,7 @@
 
 <p align="center"><img src="https://socialify.git.ci/mazibuko-s/taskme/image?description=1&amp;font=KoHo&amp;language=1&amp;name=1&amp;pattern=Solid&amp;theme=Dark" alt="project-image"></p>
 
-<p id="description">Task.Me is a task management application built with Next.js and bootstrapped with T3. It utilizes Prisma and MongoDB for efficient database management. The primary purpose of the app is to enable users to assign tasks to each other fostering collaboration and productivity.</p>
+<p id="description">Task.Me is a task management application built with Next.js and bootstrapped with T3. It utilizes Prisma and PostgreSQL for efficient database management. The primary purpose of the app is to enable users to assign tasks to each other fostering collaboration and productivity.</p>
 
 <h2>Project Screenshots:</h2>
 
@@ -56,7 +56,7 @@ Technologies used in the project:
 
 *   Next.js
 *   Prisma
-*   MongoDB
+*   PostgreSQL
 
 <h2>🛡️ License:</h2>
 

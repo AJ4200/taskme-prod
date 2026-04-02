@@ -1,5 +1,6 @@
 "use client";
 
+import type { TaskPriority, TaskStatus } from "@prisma/client";
 import React, { useState } from "react";
 import useCreateTask from "~/hooks/task/useCreateTask";
 import type Task from "~/models/task.model";
@@ -11,8 +12,8 @@ interface TaskModalProps {
 
 const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
   const [title, setTitle] = useState("");
-  const [status, setStatus] = useState("");
-  const [priority, setPriority] = useState("");
+  const [status, setStatus] = useState<TaskStatus>("TODO");
+  const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
   const [dueDate, setDueDate] = useState("");
 
   const { createTask, loading, error } = useCreateTask();
@@ -38,8 +39,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
       await createTask(newTask);
 
       setTitle("");
-      setStatus("");
-      setPriority("");
+      setStatus("TODO");
+      setPriority("MEDIUM");
       setDueDate("");
 
       onRequestClose();
@@ -76,22 +77,28 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
           />
 
           <label className="mb-2 block">Status:</label>
-          <input
-            type="text"
+          <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => setStatus(e.target.value as TaskStatus)}
             className="mb-4 w-full border px-3 py-2"
-            required
-          />
+          >
+            <option value="TODO">Todo</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="BLOCKED">Blocked</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
 
           <label className="mb-2 block">Priority:</label>
-          <input
-            type="text"
+          <select
             value={priority}
-            onChange={(e) => setPriority(e.target.value)}
+            onChange={(e) => setPriority(e.target.value as TaskPriority)}
             className="mb-4 w-full border px-3 py-2"
-            required
-          />
+          >
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
+          </select>
 
           <label className="mb-2 block">Due Date:</label>
           <input

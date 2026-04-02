@@ -1,6 +1,6 @@
 "use client";
 
-import type { GoalStatus } from "@prisma/client";
+import type { GoalStatus, TaskPriority, TaskStatus } from "@prisma/client";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBullseye,
@@ -59,14 +59,24 @@ interface Overview {
 
 interface TaskDraft {
   title: string;
-  status: string;
-  priority: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   dueDate: string;
   assigneeId: string;
 }
 
-const statusOptions = ["Todo", "In Progress", "Blocked", "Completed"];
-const priorityOptions = ["Low", "Medium", "High", "Critical"];
+const statusOptions: Array<{ label: string; value: TaskStatus }> = [
+  { label: "Todo", value: "TODO" },
+  { label: "In Progress", value: "IN_PROGRESS" },
+  { label: "Blocked", value: "BLOCKED" },
+  { label: "Completed", value: "COMPLETED" },
+];
+const priorityOptions: Array<{ label: string; value: TaskPriority }> = [
+  { label: "Low", value: "LOW" },
+  { label: "Medium", value: "MEDIUM" },
+  { label: "High", value: "HIGH" },
+  { label: "Critical", value: "CRITICAL" },
+];
 
 const toInputDate = (value: string | Date) => {
   const date = new Date(value);
@@ -84,10 +94,13 @@ const toDisplayDate = (value: string | Date) => {
   return date.toLocaleDateString();
 };
 
-const isCompletedStatus = (status: string) => {
-  const normalized = status.trim().toLowerCase();
-  return normalized === "completed" || normalized === "done";
-};
+const isCompletedStatus = (status: TaskStatus) => status === "COMPLETED";
+const toTaskLabel = (value: string) =>
+  value
+    .toLowerCase()
+    .split("_")
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
 
 const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
   const { success: notifySuccess, error: notifyError } = useNotifications();
@@ -106,8 +119,8 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
   const [goalSelection, setGoalSelection] = useState<Record<string, string>>({});
   const [createDraft, setCreateDraft] = useState<TaskDraft>({
     title: "",
-    status: "Todo",
-    priority: "Medium",
+    status: "TODO",
+    priority: "MEDIUM",
     dueDate: toInputDate(new Date()),
     assigneeId: "",
   });
@@ -217,8 +230,8 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
       ...prev,
       title: "",
       dueDate: toInputDate(new Date()),
-      status: "Todo",
-      priority: "Medium",
+      status: "TODO",
+      priority: "MEDIUM",
     }));
     await finishAndRefresh(`Task "${title}" created.`);
     setBusyId(null);
@@ -281,7 +294,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
     resetMessages();
     setBusyId(task.id);
     const result = await updateTaskAction(task.id, {
-      status: "Completed",
+      status: "COMPLETED",
     });
 
     if (!result.success) {
@@ -418,26 +431,32 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
           <select
             value={createDraft.status}
             onChange={(event) =>
-              setCreateDraft((prev) => ({ ...prev, status: event.target.value }))
+              setCreateDraft((prev) => ({
+                ...prev,
+                status: event.target.value as TaskStatus,
+              }))
             }
             className="border bg-transparent px-2"
           >
             {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
           <select
             value={createDraft.priority}
             onChange={(event) =>
-              setCreateDraft((prev) => ({ ...prev, priority: event.target.value }))
+              setCreateDraft((prev) => ({
+                ...prev,
+                priority: event.target.value as TaskPriority,
+              }))
             }
             className="border bg-transparent px-2"
           >
             {priorityOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -507,14 +526,16 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
                         value={editDraft.status}
                         onChange={(event) =>
                           setEditDraft((prev) =>
-                            prev ? { ...prev, status: event.target.value } : prev,
+                            prev
+                              ? { ...prev, status: event.target.value as TaskStatus }
+                              : prev,
                           )
                         }
                         className="border bg-transparent px-2"
                       >
                         {statusOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
+                          <option key={option.value} value={option.value}>
+                            {option.label}
                           </option>
                         ))}
                       </select>
@@ -522,14 +543,16 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
                         value={editDraft.priority}
                         onChange={(event) =>
                           setEditDraft((prev) =>
-                            prev ? { ...prev, priority: event.target.value } : prev,
+                            prev
+                              ? { ...prev, priority: event.target.value as TaskPriority }
+                              : prev,
                           )
                         }
                         className="border bg-transparent px-2"
                       >
                         {priorityOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
+                          <option key={option.value} value={option.value}>
+                            {option.label}
                           </option>
                         ))}
                       </select>
@@ -566,8 +589,8 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
                 ) : (
                   <div>
                     <h3 className="text-2xl font-semibold">{task.title}</h3>
-                    <p>Status: {task.status}</p>
-                    <p>Priority: {task.priority}</p>
+                    <p>Status: {toTaskLabel(task.status)}</p>
+                    <p>Priority: {toTaskLabel(task.priority)}</p>
                     <p>Due: {toDisplayDate(task.dueDate)}</p>
                     <p>Owner: {usernameById.get(task.ownerId) ?? "Unknown"}</p>
                     <p>Assigned to: {usernameById.get(task.assigneeId) ?? "Unknown"}</p>
