@@ -1,13 +1,14 @@
 "use server";
 
 import {
-  type ConnectionStatus,
-  type GoalCadence,
-  type GoalStatus,
-  type PartnershipKind,
-  type PartnershipStatus,
-  type TaskStatus,
+  ConnectionStatus,
+  GoalCadence,
+  GoalStatus,
+  NotificationType,
+  Prisma,
+  PartnershipStatus,
 } from "@prisma/client";
+import type { PartnershipKind } from "@prisma/client";
 import { db } from "~/server/db";
 import { createNotificationAction } from "./social";
 
@@ -158,11 +159,11 @@ export async function sendFriendRequestAction(
     });
 
     if (existing) {
-      if (existing.status === "ACCEPTED") {
+      if (existing.status === ConnectionStatus.ACCEPTED) {
         return { success: false, error: "You are already friends" };
       }
 
-      if (existing.status === "PENDING") {
+      if (existing.status === ConnectionStatus.PENDING) {
         return { success: false, error: "A pending friend request already exists" };
       }
 
@@ -171,7 +172,7 @@ export async function sendFriendRequestAction(
         data: {
           requesterId,
           addresseeId,
-          status: "PENDING",
+          status: ConnectionStatus.PENDING,
           message: input.message,
         },
         include: {
@@ -197,7 +198,7 @@ export async function sendFriendRequestAction(
 
     await createNotificationAction({
       userId: addresseeId,
-      type: "FRIEND_REQUEST",
+      type: NotificationType.FRIEND_REQUEST,
       title: "New friend request",
       body: "You received a new friend request.",
       link: "/tasks",
@@ -230,19 +231,21 @@ export async function respondFriendRequestAction(
       return { success: false, error: "Only the addressee can respond to this request" };
     }
 
-    if (friendship.status !== "PENDING") {
+    if (friendship.status !== ConnectionStatus.PENDING) {
       return { success: false, error: "This friend request is no longer pending" };
     }
 
     const updated = await db.friendship.update({
       where: { id: input.friendshipId },
-      data: { status: input.accept ? "ACCEPTED" : "DECLINED" },
+      data: {
+        status: input.accept ? ConnectionStatus.ACCEPTED : ConnectionStatus.DECLINED,
+      },
     });
 
     if (input.accept) {
       await createNotificationAction({
         userId: friendship.requesterId,
-        type: "FRIEND_REQUEST_ACCEPTED",
+        type: NotificationType.FRIEND_REQUEST_ACCEPTED,
         title: "Friend request accepted",
         body: "Your friend request was accepted.",
         link: "/tasks",
@@ -322,7 +325,11 @@ export async function createPartnershipAction(
       },
     });
 
-    if (existing && (existing.status === "PENDING" || existing.status === "ACTIVE")) {
+    if (
+      existing &&
+      (existing.status === PartnershipStatus.PENDING ||
+        existing.status === PartnershipStatus.ACTIVE)
+    ) {
       return { success: false, error: "An active or pending partnership already exists" };
     }
 
@@ -333,7 +340,7 @@ export async function createPartnershipAction(
           initiatorId,
           partnerId,
           kind: input.kind,
-          status: "PENDING",
+          status: PartnershipStatus.PENDING,
           notes: input.notes,
           startedAt: null,
           endedAt: null,
@@ -379,15 +386,15 @@ export async function respondPartnershipInviteAction(
       return { success: false, error: "Only the invited partner can respond" };
     }
 
-    if (partnership.status !== "PENDING") {
+    if (partnership.status !== PartnershipStatus.PENDING) {
       return { success: false, error: "Partnership request is no longer pending" };
     }
 
     const updated = await db.partnership.update({
       where: { id: input.partnershipId },
       data: input.accept
-        ? { status: "ACTIVE", startedAt: new Date(), endedAt: null }
-        : { status: "DECLINED", endedAt: new Date() },
+        ? { status: PartnershipStatus.ACTIVE, startedAt: new Date(), endedAt: null }
+        : { status: PartnershipStatus.DECLINED, endedAt: new Date() },
     });
 
     return { success: true, data: updated };
@@ -443,7 +450,7 @@ export async function createGoalAction(
         description: input.description,
         partnerId: input.partnerId,
         partnershipId: input.partnershipId,
-        cadence: input.cadence ?? "WEEKLY",
+        cadence: input.cadence ?? GoalCadence.WEEKLY,
         targetDate: input.targetDate ? new Date(input.targetDate) : undefined,
       },
     });
@@ -753,29 +760,32 @@ export async function getAccountabilityOverviewAction(
       await Promise.all([
         db.friendship.count({
           where: {
-            status: "ACCEPTED",
+            status: ConnectionStatus.ACCEPTED,
             OR: [{ requesterId: userId }, { addresseeId: userId }],
           },
         }),
         db.partnership.count({
           where: {
-            status: "ACTIVE",
+            status: PartnershipStatus.ACTIVE,
             OR: [{ initiatorId: userId }, { partnerId: userId }],
           },
         }),
-        db.goal.count({ where: { ownerId: userId, status: "ACTIVE" } }),
-        db.goal.count({ where: { ownerId: userId, status: "COMPLETED" } }),
+        db.goal.count({ where: { ownerId: userId, status: GoalStatus.ACTIVE } }),
+        db.goal.count({ where: { ownerId: userId, status: GoalStatus.COMPLETED } }),
       ]);
 
-    const [totalOwnedTasks, completedOwnedTasks] = await Promise.all([
+    const [totalOwnedTasks, completedOwnedTasksRows] = await Promise.all([
       db.task.count({ where: { ownerId: userId } }),
-      db.task.count({
-        where: {
-          ownerId: userId,
-          status: "COMPLETED" satisfies TaskStatus,
-        },
-      }),
+      db.$queryRaw<Array<{ count: bigint }>>(
+        Prisma.sql`
+          SELECT COUNT(*)::bigint AS count
+          FROM "Task"
+          WHERE "ownerId" = ${userId}
+            AND "status"::text IN ('COMPLETED', 'DONE')
+        `,
+      ),
     ]);
+    const completedOwnedTasks = Number(completedOwnedTasksRows[0]?.count ?? 0);
 
     const taskCompletionRate =
       totalOwnedTasks === 0

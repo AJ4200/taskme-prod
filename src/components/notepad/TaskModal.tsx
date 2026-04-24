@@ -1,9 +1,10 @@
 "use client";
 
-import type { TaskPriority, TaskStatus } from "@prisma/client";
+import { TaskPriority, TaskStatus } from "@prisma/client";
 import React, { useState } from "react";
 import useCreateTask from "~/hooks/task/useCreateTask";
 import type Task from "~/models/task.model";
+import { useNotifications } from "../providers/NotificationProvider";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -12,17 +13,19 @@ interface TaskModalProps {
 
 const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
   const [title, setTitle] = useState("");
-  const [status, setStatus] = useState<TaskStatus>("TODO");
-  const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
+  const [status, setStatus] = useState<TaskStatus>(TaskStatus.TODO);
+  const [priority, setPriority] = useState<TaskPriority>(TaskPriority.MEDIUM);
   const [dueDate, setDueDate] = useState("");
 
   const { createTask, loading, error } = useCreateTask();
+  const { success: notifySuccess, error: notifyError, warning: notifyWarning } = useNotifications();
   const ownerId = sessionStorage.getItem("userId");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!ownerId) {
+      notifyWarning("You need to log in to create tasks.");
       return;
     }
 
@@ -36,16 +39,22 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
         assigneeId: ownerId,
       };
 
-      await createTask(newTask);
+      const created = await createTask(newTask);
+      if (!created) {
+        notifyError(error ?? "Failed to create task.");
+        return;
+      }
 
       setTitle("");
-      setStatus("TODO");
-      setPriority("MEDIUM");
+      setStatus(TaskStatus.TODO);
+      setPriority(TaskPriority.MEDIUM);
       setDueDate("");
 
+      notifySuccess(`Task "${title}" created.`);
       onRequestClose();
     } catch (createError) {
       console.error("Error creating task:", createError);
+      notifyError("Failed to create task.");
     }
   };
 
@@ -82,10 +91,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
             onChange={(e) => setStatus(e.target.value as TaskStatus)}
             className="mb-4 w-full border px-3 py-2"
           >
-            <option value="TODO">Todo</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="BLOCKED">Blocked</option>
-            <option value="COMPLETED">Completed</option>
+            <option value={TaskStatus.TODO}>Todo</option>
+            <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
+            <option value={TaskStatus.BLOCKED}>Blocked</option>
+            <option value={TaskStatus.COMPLETED}>Completed</option>
           </select>
 
           <label className="mb-2 block">Priority:</label>
@@ -94,10 +103,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
             onChange={(e) => setPriority(e.target.value as TaskPriority)}
             className="mb-4 w-full border px-3 py-2"
           >
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="CRITICAL">Critical</option>
+            <option value={TaskPriority.LOW}>Low</option>
+            <option value={TaskPriority.MEDIUM}>Medium</option>
+            <option value={TaskPriority.HIGH}>High</option>
           </select>
 
           <label className="mb-2 block">Due Date:</label>
@@ -116,11 +124,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onRequestClose }) => {
           >
             {loading ? "Creating..." : "Create Task"}
           </button>
-
-          {error && <p className="mt-2 text-red-500">{error}</p>}
-          {!ownerId && (
-            <p className="mt-2 text-red-500">You need to log in to create tasks.</p>
-          )}
         </div>
       </form>
     </dialog>

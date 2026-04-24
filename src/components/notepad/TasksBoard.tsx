@@ -1,6 +1,7 @@
 "use client";
 
-import type { GoalStatus, TaskPriority, TaskStatus } from "@prisma/client";
+import { TaskPriority, TaskStatus } from "@prisma/client";
+import type { GoalStatus as GoalStatusType } from "@prisma/client";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBullseye,
@@ -46,7 +47,7 @@ interface SimpleUser {
 interface GoalRow {
   id: string;
   title: string;
-  status: GoalStatus;
+  status: GoalStatusType;
   progress: number;
 }
 
@@ -66,16 +67,15 @@ interface TaskDraft {
 }
 
 const statusOptions: Array<{ label: string; value: TaskStatus }> = [
-  { label: "Todo", value: "TODO" },
-  { label: "In Progress", value: "IN_PROGRESS" },
-  { label: "Blocked", value: "BLOCKED" },
-  { label: "Completed", value: "COMPLETED" },
+  { label: "Todo", value: TaskStatus.TODO },
+  { label: "In Progress", value: TaskStatus.IN_PROGRESS },
+  { label: "Blocked", value: TaskStatus.BLOCKED },
+  { label: "Completed", value: TaskStatus.COMPLETED },
 ];
 const priorityOptions: Array<{ label: string; value: TaskPriority }> = [
-  { label: "Low", value: "LOW" },
-  { label: "Medium", value: "MEDIUM" },
-  { label: "High", value: "HIGH" },
-  { label: "Critical", value: "CRITICAL" },
+  { label: "Low", value: TaskPriority.LOW },
+  { label: "Medium", value: TaskPriority.MEDIUM },
+  { label: "High", value: TaskPriority.HIGH },
 ];
 
 const toInputDate = (value: string | Date) => {
@@ -94,7 +94,7 @@ const toDisplayDate = (value: string | Date) => {
   return date.toLocaleDateString();
 };
 
-const isCompletedStatus = (status: TaskStatus) => status === "COMPLETED";
+const isCompletedStatus = (status: TaskStatus) => status === TaskStatus.COMPLETED;
 const toTaskLabel = (value: string) =>
   value
     .toLowerCase()
@@ -119,8 +119,8 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
   const [goalSelection, setGoalSelection] = useState<Record<string, string>>({});
   const [createDraft, setCreateDraft] = useState<TaskDraft>({
     title: "",
-    status: "TODO",
-    priority: "MEDIUM",
+    status: TaskStatus.TODO,
+    priority: TaskPriority.MEDIUM,
     dueDate: toInputDate(new Date()),
     assigneeId: "",
   });
@@ -230,8 +230,8 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
       ...prev,
       title: "",
       dueDate: toInputDate(new Date()),
-      status: "TODO",
-      priority: "MEDIUM",
+      status: TaskStatus.TODO,
+      priority: TaskPriority.MEDIUM,
     }));
     await finishAndRefresh(`Task "${title}" created.`);
     setBusyId(null);
@@ -294,7 +294,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
     resetMessages();
     setBusyId(task.id);
     const result = await updateTaskAction(task.id, {
-      status: "COMPLETED",
+      status: TaskStatus.COMPLETED,
     });
 
     if (!result.success) {
@@ -408,9 +408,6 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
           Assigned
         </button>
       </div>
-
-      {notice && <p className="text-base text-green-700">{notice}</p>}
-      {error && <p className="text-base text-red-700">{error}</p>}
 
       <form className="box bg-white/70 p-3 text-base" onSubmit={handleCreateTask}>
         <h3 className="mb-2 flex items-center gap-2 text-2xl underline">

@@ -1,6 +1,6 @@
 "use server";
 
-import type { ConnectionStatus, NotificationType } from "@prisma/client";
+import { ConnectionStatus, NotificationType } from "@prisma/client";
 import { db } from "~/server/db";
 
 interface ActionResult<T> {
@@ -38,7 +38,7 @@ export async function createNotificationAction(
     const notification = await db.notification.create({
       data: {
         userId,
-        type: input.type ?? "SYSTEM",
+        type: input.type ?? NotificationType.SYSTEM,
         title,
         body: input.body?.trim() || undefined,
         link: input.link?.trim() || undefined,
@@ -137,7 +137,7 @@ export async function sendMessageAction(
 
     const friendship = await db.friendship.findFirst({
       where: {
-        status: "ACCEPTED" satisfies ConnectionStatus,
+        status: ConnectionStatus.ACCEPTED,
         OR: [
           { requesterId: senderId, addresseeId: recipientId },
           { requesterId: recipientId, addresseeId: senderId },
@@ -203,7 +203,7 @@ export async function sendMessageAction(
 
     await createNotificationAction({
       userId: recipientId,
-      type: "MESSAGE" satisfies NotificationType,
+      type: NotificationType.MESSAGE,
       title: `New message from ${message.sender.username}`,
       body: content.length > 90 ? `${content.slice(0, 90)}...` : content,
       link: "/tasks",

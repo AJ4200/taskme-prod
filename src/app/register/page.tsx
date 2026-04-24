@@ -19,13 +19,11 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
   } = useForm<RegisterForm>();
   const router = useRouter();
-  const { error: notifyError } = useNotifications();
+  const { error: notifyError, warning: notifyWarning } = useNotifications();
   const [loading, setLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
@@ -42,11 +40,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     try {
       setLoading(true);
-      setErrorMessage(null);
       const result = await registerAction(data);
       if (!result.success || !result.user || !result.token) {
         const message = result.error ?? "Registration failed. Please try again.";
-        setErrorMessage(message);
         notifyError(message);
         return;
       }
@@ -61,7 +57,6 @@ export default function RegisterPage() {
       router.push("/tasks");
     } catch (error) {
       const message = "Registration failed. Please try again.";
-      setErrorMessage(message);
       notifyError(message);
       console.error(error);
     } finally {
@@ -75,7 +70,17 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
-      <form onSubmit={handleSubmit(onSubmit)} className="notepad relative">
+      <form
+        onSubmit={handleSubmit(onSubmit, (formErrors) => {
+          const firstError =
+            formErrors.username?.message ??
+            formErrors.email?.message ??
+            formErrors.password?.message ??
+            "Please check the form.";
+          notifyWarning(firstError);
+        })}
+        className="notepad relative"
+      >
         <div className="top">
           <h1 className="text-center text-4xl text-gray-300">Task.Me---Register</h1>
         </div>
@@ -137,12 +142,6 @@ export default function RegisterPage() {
               Login instead
             </Link>
           </p>
-        </div>
-        <div className="pointer-events-none absolute bottom-2 right-3 min-h-5 bg-transparent text-right text-xs text-red-700">
-          {errors.username?.message && <p>{errors.username.message}</p>}
-          {errors.email?.message && <p>{errors.email.message}</p>}
-          {errors.password?.message && <p>{errors.password.message}</p>}
-          {errorMessage && <p>{errorMessage}</p>}
         </div>
       </form>
     </div>

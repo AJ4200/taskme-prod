@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ConnectionStatus } from "@prisma/client";
 import { listFriendConnectionsAction } from "~/actions/accountability";
 import { listConversationAction, sendMessageAction } from "~/actions/social";
 import { getAllTasksAction } from "~/actions/task";
@@ -11,7 +12,7 @@ interface InboxAlertRow {
   id: string;
   title: string;
   body?: string | null;
-  status: string;
+  status: ConnectionStatus;
   kind: "friend_request" | "assigned_task";
   createdAt: string | Date;
 }
@@ -23,7 +24,7 @@ interface FriendRow {
     id: string;
     username: string;
   };
-  status: string;
+  status: ConnectionStatus;
 }
 
 interface MessageRow {
@@ -36,7 +37,12 @@ interface MessageRow {
 }
 
 const InboxBoard: React.FC = () => {
-  const { success: notifySuccess, error: notifyError } = useNotifications();
+  const {
+    success: notifySuccess,
+    error: notifyError,
+    request: notifyRequest,
+    chat: notifyChat,
+  } = useNotifications();
   const [userId, setUserId] = useState("");
   const [currentUsername, setCurrentUsername] = useState("");
   const [alerts, setAlerts] = useState<InboxAlertRow[]>([]);
@@ -47,6 +53,8 @@ const InboxBoard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const previousAlertCountRef = useRef(0);
+  const lastIncomingMessageIdRef = useRef<string>("");
 
   const selectedFriendName = useMemo(
     () => friends.find((row) => row.friend.id === selectedFriendId)?.friend.username ?? "",
@@ -73,7 +81,7 @@ const InboxBoard: React.FC = () => {
             createdAt: string | Date;
             friend: { username: string };
           }> | undefined) ?? []
-          ).filter((row) => row.isIncoming && row.status === "PENDING")
+          ).filter((row) => row.isIncoming && row.status === ConnectionStatus.PENDING)
         ).map((row) => ({
           id: `fr-${row.friendshipId}`,
           title: "New friend request",
@@ -98,7 +106,7 @@ const InboxBoard: React.FC = () => {
           id: `task-${task.id}`,
           title: "Task assigned",
           body: `"${task.title}" is assigned to you.`,
-          status: "PENDING",
+          status: ConnectionStatus.PENDING,
           kind: "assigned_task",
           createdAt: task.createdAt,
         }))
@@ -109,9 +117,14 @@ const InboxBoard: React.FC = () => {
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
     );
+    const nextAlertCount = incomingRequestAlerts.length + assignedTaskAlerts.length;
+    if (previousAlertCountRef.current > 0 && nextAlertCount > previousAlertCountRef.current) {
+      notifyRequest(`${nextAlertCount - previousAlertCountRef.current} new inbox request(s).`);
+    }
+    previousAlertCountRef.current = nextAlertCount;
     setFriends(fRes.success ? ((fRes.data as FriendRow[] | undefined) ?? []) : []);
     setLoading(false);
-  }, [notifyError]);
+  }, [notifyError, notifyRequest]);
 
   const loadConversation = useCallback(async () => {
     if (!userId || !selectedFriendId) {
@@ -123,8 +136,24 @@ const InboxBoard: React.FC = () => {
       notifyError(result.error ?? "Failed to load conversation.");
       return;
     }
-    setMessages((result.data as MessageRow[] | undefined) ?? []);
-  }, [notifyError, selectedFriendId, userId]);
+    const nextMessages = (result.data as MessageRow[] | undefined) ?? [];
+    setMessages(nextMessages);
+
+    const latestIncoming = [...nextMessages]
+      .reverse()
+      .find((message) => message.senderId !== userId);
+    if (
+      latestIncoming &&
+      lastIncomingMessageIdRef.current &&
+      latestIncoming.id !== lastIncomingMessageIdRef.current
+    ) {
+      const senderName = latestIncoming.sender?.username ?? selectedFriendName || "Friend";
+      notifyChat(`New message from ${senderName}.`);
+    }
+    if (latestIncoming) {
+      lastIncomingMessageIdRef.current = latestIncoming.id;
+    }
+  }, [notifyChat, notifyError, selectedFriendId, selectedFriendName, userId]);
 
   useEffect(() => {
     const uid = sessionStorage.getItem("userId") ?? "";

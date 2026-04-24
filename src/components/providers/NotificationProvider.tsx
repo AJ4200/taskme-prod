@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
-type NotificationType = "success" | "error" | "info";
+type NotificationType = "success" | "error" | "fail" | "warning" | "request" | "chat";
 
 interface NotificationItem {
   id: string;
@@ -14,7 +15,10 @@ interface NotificationContextValue {
   notify: (type: NotificationType, message: string) => void;
   success: (message: string) => void;
   error: (message: string) => void;
-  info: (message: string) => void;
+  fail: (message: string) => void;
+  warning: (message: string) => void;
+  request: (message: string) => void;
+  chat: (message: string) => void;
 }
 
 const PENDING_NOTIFICATION_KEY = "__taskme_notification__";
@@ -22,9 +26,12 @@ const PENDING_NOTIFICATION_KEY = "__taskme_notification__";
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 const getTypeClassName = (type: NotificationType) => {
-  if (type === "success") return "border-emerald-700/40 bg-emerald-100/95 text-emerald-900";
-  if (type === "error") return "border-red-700/40 bg-red-100/95 text-red-900";
-  return "border-sky-700/40 bg-sky-100/95 text-sky-900";
+  if (type === "success") return "text-emerald-700";
+  if (type === "error") return "text-red-700";
+  if (type === "fail") return "text-rose-700";
+  if (type === "warning") return "text-amber-700";
+  if (type === "request") return "text-orange-700";
+  return "text-sky-700";
 };
 
 export const setPendingNotification = (type: NotificationType, message: string) => {
@@ -34,13 +41,14 @@ export const setPendingNotification = (type: NotificationType, message: string) 
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<NotificationItem[]>([]);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   const notify = useCallback((type: NotificationType, message: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setItems((prev) => [...prev, { id, type, message }]);
     window.setTimeout(() => {
       setItems((prev) => prev.filter((item) => item.id !== id));
-    }, 3500);
+    }, 4500);
   }, []);
 
   useEffect(() => {
@@ -59,29 +67,52 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [notify]);
 
+  useEffect(() => {
+    const resolveTarget = () => {
+      const target = document.getElementById("notepad-notification-host");
+      setPortalTarget(target);
+    };
+
+    resolveTarget();
+    window.addEventListener("focus", resolveTarget);
+    window.addEventListener("hashchange", resolveTarget);
+    return () => {
+      window.removeEventListener("focus", resolveTarget);
+      window.removeEventListener("hashchange", resolveTarget);
+    };
+  }, []);
+
   const value = useMemo<NotificationContextValue>(
     () => ({
       notify,
       success: (message) => notify("success", message),
       error: (message) => notify("error", message),
-      info: (message) => notify("info", message),
+      fail: (message) => notify("fail", message),
+      warning: (message) => notify("warning", message),
+      request: (message) => notify("request", message),
+      chat: (message) => notify("chat", message),
     }),
     [notify],
+  );
+
+  const feed = (
+    <div
+      className={`pointer-events-none z-[1000] flex w-full max-w-sm flex-col items-end gap-1 text-right ${
+        portalTarget ? "absolute bottom-2 right-3" : "fixed bottom-3 right-3"
+      }`}
+    >
+      {items.map((item) => (
+        <div key={item.id} className={`text-xs font-semibold ${getTypeClassName(item.type)}`}>
+          {item.type.toUpperCase()}: {item.message}
+        </div>
+      ))}
+    </div>
   );
 
   return (
     <NotificationContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-[1000] flex w-full max-w-sm flex-col gap-2">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className={`box border px-3 py-2 text-sm shadow-lg ${getTypeClassName(item.type)}`}
-          >
-            {item.message}
-          </div>
-        ))}
-      </div>
+      {portalTarget ? createPortal(feed, portalTarget) : feed}
     </NotificationContext.Provider>
   );
 };

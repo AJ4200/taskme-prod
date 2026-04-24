@@ -1,22 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { ConnectionStatus } from "@prisma/client";
 import AccountabilityBoard from "./AccountabilityBoard";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaBell, FaGithub, FaLinkedin, FaTasks, FaUserFriends } from "react-icons/fa";
+import { FaBell, FaGithub, FaLinkedin, FaTasks } from "react-icons/fa";
 import ProfileOptions from "./ProfileOptions";
 import TasksBoard from "./TasksBoard";
 import multiavatar from "@multiavatar/multiavatar/esm";
 import InboxBoard from "./InboxBoard";
 import { listFriendConnectionsAction } from "~/actions/accountability";
 import { getAllTasksAction } from "~/actions/task";
+import { useNotifications } from "../providers/NotificationProvider";
 
 const Notepad: React.FC = () => {
   const [view, setView] = useState<"tasks" | "accountability" | "inbox">("tasks");
   const [username, setUsername] = useState<string | null>(null);
   const [options, setOptions] = useState(false);
-  const [alertText, setAlertText] = useState("");
+  const { request: notifyRequest, warning: notifyWarning } = useNotifications();
 
   useEffect(() => {
     setUsername(sessionStorage.getItem("username"));
@@ -25,6 +27,8 @@ const Notepad: React.FC = () => {
   useEffect(() => {
     const userId = sessionStorage.getItem("userId");
     if (!userId) return;
+    let previousIncomingRequests = 0;
+    let previousAssignedTasks = 0;
 
     const poll = async () => {
       const [friendResult, taskResult] = await Promise.all([
@@ -34,9 +38,14 @@ const Notepad: React.FC = () => {
 
       const incomingRequests = friendResult.success
         ? (
-            ((friendResult.data as Array<{ status: string; isIncoming: boolean }> | undefined) ??
+            ((
+              friendResult.data as Array<{
+                status: ConnectionStatus;
+                isIncoming: boolean;
+              }> | undefined
+            ) ??
               []
-            ).filter((row) => row.status === "PENDING" && row.isIncoming).length
+            ).filter((row) => row.status === ConnectionStatus.PENDING && row.isIncoming).length
           )
         : 0;
 
@@ -48,18 +57,16 @@ const Notepad: React.FC = () => {
           )
         : 0;
 
-      const nextAlertParts: string[] = [];
-      if (incomingRequests > 0) {
-        nextAlertParts.push(
-          `${incomingRequests} friend request${incomingRequests > 1 ? "s" : ""} waiting`,
-        );
+      if (incomingRequests > previousIncomingRequests) {
+        const diff = incomingRequests - previousIncomingRequests;
+        notifyRequest(`${diff} new friend request${diff > 1 ? "s" : ""}.`);
       }
-      if (assignedTasks > 0) {
-        nextAlertParts.push(
-          `${assignedTasks} assigned task${assignedTasks > 1 ? "s" : ""} in your inbox`,
-        );
+      if (assignedTasks > previousAssignedTasks) {
+        const diff = assignedTasks - previousAssignedTasks;
+        notifyWarning(`${diff} new assigned task${diff > 1 ? "s" : ""}.`);
       }
-      setAlertText(nextAlertParts.join(" | "));
+      previousIncomingRequests = incomingRequests;
+      previousAssignedTasks = assignedTasks;
     };
 
     void poll();
@@ -164,9 +171,7 @@ const Notepad: React.FC = () => {
           <InboxBoard />
         )}
       </div>
-      <div className="pointer-events-none absolute bottom-2 right-3 min-h-5 bg-transparent text-right text-xs text-red-700">
-        {alertText && <p>{alertText}</p>}
-      </div>
+      <div id="notepad-notification-host" className="pointer-events-none absolute inset-0" />
     </div>
   );
 };

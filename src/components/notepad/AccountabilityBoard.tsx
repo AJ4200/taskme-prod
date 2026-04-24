@@ -11,6 +11,7 @@ import {
   FaUserFriends,
 } from "react-icons/fa";
 import type { GoalCadence, GoalStatus, PartnershipKind } from "@prisma/client";
+import { ConnectionStatus, PartnershipStatus } from "@prisma/client";
 import {
   createDailyCheckInAction,
   createGoalAction,
@@ -40,7 +41,7 @@ interface SimpleUser {
 interface FriendRow {
   friendshipId: string;
   isIncoming: boolean;
-  status: string;
+  status: ConnectionStatus;
   createdAt: string | Date;
   friend: SimpleUser;
 }
@@ -50,7 +51,7 @@ interface PartnerRow {
   initiatorId: string;
   partnerId: string;
   kind: string;
-  status: string;
+  status: PartnershipStatus;
   createdAt: string | Date;
   initiator: SimpleUser;
   partner: SimpleUser;
@@ -228,9 +229,6 @@ const AccountabilityBoard: React.FC = () => {
         })}
       </div>
 
-      {notice && <p className="mb-2 text-green-700">{notice}</p>}
-      {error && <p className="mb-2 text-red-700">{error}</p>}
-
       {tab === "overview" && (
         <div className="space-y-3">
           <h2 className="text-center text-4xl underline">Accountability Dashboard</h2>
@@ -291,7 +289,7 @@ const AccountabilityBoard: React.FC = () => {
                 <span className="font-bold">{friend.friend.username}</span> - {friend.status}
               </p>
               <p className="text-sm">Created: {fmt(friend.createdAt)}</p>
-              {friend.status === "PENDING" && friend.isIncoming && (
+              {friend.status === ConnectionStatus.PENDING && friend.isIncoming && (
                 <div className="mt-2 flex gap-2">
                   <button
                     type="button"
@@ -391,7 +389,8 @@ const AccountabilityBoard: React.FC = () => {
                 ? partnership.partner.username
                 : partnership.initiator.username;
             const canRespond =
-              partnership.partnerId === userId && partnership.status === "PENDING";
+              partnership.partnerId === userId &&
+              partnership.status === PartnershipStatus.PENDING;
             return (
               <div key={partnership.id} className="box bg-white/70 p-3">
                 <p>

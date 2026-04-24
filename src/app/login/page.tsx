@@ -18,13 +18,11 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
   } = useForm<LoginForm>();
   const router = useRouter();
-  const { error: notifyError } = useNotifications();
+  const { error: notifyError, warning: notifyWarning } = useNotifications();
   const [loading, setLoading] = React.useState(false);
   const [isReady, setIsReady] = React.useState(false);
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
@@ -41,7 +39,6 @@ export default function LoginPage() {
   const onSubmit: SubmitHandler<LoginForm> = async (data) => {
     try {
       setLoading(true);
-      setErrorMessage(null);
       const result = await loginAction(data);
 
       if (result.success && result.user && result.token) {
@@ -52,12 +49,10 @@ export default function LoginPage() {
         router.push("/tasks");
       } else {
         const message = result.error ?? "Login failed. Please try again.";
-        setErrorMessage(message);
         notifyError(message);
       }
     } catch (error) {
       const message = "Login failed. Please try again.";
-      setErrorMessage(message);
       notifyError(message);
       console.error(error);
     } finally {
@@ -71,7 +66,14 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
-      <form className="notepad relative" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        className="notepad relative"
+        onSubmit={handleSubmit(onSubmit, (formErrors) => {
+          const firstError =
+            formErrors.username?.message ?? formErrors.password?.message ?? "Please check the form.";
+          notifyWarning(firstError);
+        })}
+      >
         <div className="top">
           <h1 className="text-center text-4xl text-gray-300">Task.Me---Login</h1>
         </div>
@@ -130,12 +132,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-
-        </div>
-        <div className="pointer-events-none absolute bottom-2 right-3 min-h-5 bg-transparent text-right text-xs text-red-700">
-          {errors.username?.message && <p>{errors.username.message}</p>}
-          {errors.password?.message && <p>{errors.password.message}</p>}
-          {errorMessage && <p>{errorMessage}</p>}
         </div>
       </form>
     </div>

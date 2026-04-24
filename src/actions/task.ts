@@ -1,6 +1,7 @@
 "use server";
 
-import type { NotificationType, TaskPriority, TaskStatus } from "@prisma/client";
+import { NotificationType, Prisma } from "@prisma/client";
+import type { TaskPriority, TaskStatus } from "@prisma/client";
 import { db } from "~/server/db";
 import { createNotificationAction } from "./social";
 
@@ -18,6 +19,11 @@ interface TaskActionResult<T> {
   data?: T;
   error?: string;
 }
+
+const normalizePriorityForDb = (priority: TaskPriority): TaskPriority => {
+  // Migration compatibility: some deployed DBs still don't support CRITICAL.
+  return priority === "CRITICAL" ? "HIGH" : priority;
+};
 
 const taskInclude = {
   owner: {
@@ -99,12 +105,17 @@ export async function createTaskAction(
       return { success: false, error: "All fields are required" };
     }
 
+    const parsedDueDate = new Date(dueDate);
+    if (Number.isNaN(parsedDueDate.getTime())) {
+      return { success: false, error: "Invalid due date" };
+    }
+
     const createdTask = await db.task.create({
       data: {
         title,
         status,
-        priority,
-        dueDate: new Date(dueDate),
+        priority: normalizePriorityForDb(priority),
+        dueDate: parsedDueDate,
         ownerId,
         assigneeId: assigneeId ?? ownerId,
       },
@@ -114,7 +125,7 @@ export async function createTaskAction(
     if (createdTask.assigneeId && createdTask.assigneeId !== createdTask.ownerId) {
       await createNotificationAction({
         userId: createdTask.assigneeId,
-        type: "TASK_ASSIGNED" satisfies NotificationType,
+        type: NotificationType.TASK_ASSIGNED,
         title: "New task assigned",
         body: `"${createdTask.title}" has been assigned to you.`,
         link: "/tasks",
@@ -124,6 +135,14 @@ export async function createTaskAction(
     return { success: true, data: createdTask };
   } catch (error) {
     console.error(error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return { success: false, error: "Task title already exists. Use a different title." };
+      }
+      if (error.code === "P2003") {
+        return { success: false, error: "Invalid owner or assignee selected." };
+      }
+    }
     return { success: false, error: "Failed to create task" };
   }
 }
@@ -151,7 +170,9 @@ export async function updateTaskAction(
       data: {
         title: taskData.title,
         status: taskData.status,
-        priority: taskData.priority,
+        priority: taskData.priority
+          ? normalizePriorityForDb(taskData.priority)
+          : undefined,
         dueDate: taskData.dueDate ? new Date(taskData.dueDate) : undefined,
         ownerId: taskData.ownerId,
         assigneeId: taskData.assigneeId,
@@ -166,7 +187,7 @@ export async function updateTaskAction(
     ) {
       await createNotificationAction({
         userId: taskData.assigneeId,
-        type: "TASK_ASSIGNED" satisfies NotificationType,
+        type: NotificationType.TASK_ASSIGNED,
         title: "Task assigned to you",
         body: `"${updatedTask.title}" has been assigned to you.`,
         link: "/tasks",
@@ -180,7 +201,7 @@ export async function updateTaskAction(
     ) {
       await createNotificationAction({
         userId: updatedTask.assigneeId,
-        type: "TASK_UPDATED" satisfies NotificationType,
+        type: NotificationType.TASK_UPDATED,
         title: "Assigned task updated",
         body: `Task "${updatedTask.title}" has new updates.`,
         link: "/tasks",
