@@ -756,25 +756,29 @@ export async function getAccountabilityOverviewAction(
       return { success: false, error: "userId is required" };
     }
 
-    const [friendCount, activePartnerships, activeGoals, completedGoals] =
-      await Promise.all([
-        db.friendship.count({
-          where: {
-            status: ConnectionStatus.ACCEPTED,
-            OR: [{ requesterId: userId }, { addresseeId: userId }],
-          },
-        }),
-        db.partnership.count({
-          where: {
-            status: PartnershipStatus.ACTIVE,
-            OR: [{ initiatorId: userId }, { partnerId: userId }],
-          },
-        }),
-        db.goal.count({ where: { ownerId: userId, status: GoalStatus.ACTIVE } }),
-        db.goal.count({ where: { ownerId: userId, status: GoalStatus.COMPLETED } }),
-      ]);
-
-    const [totalOwnedTasks, completedOwnedTasksRows] = await Promise.all([
+    const [
+      friendCountResult,
+      activePartnershipsResult,
+      activeGoalsResult,
+      completedGoalsResult,
+      totalOwnedTasksResult,
+      completedOwnedTasksResult,
+      recentCheckInsResult,
+    ] = await Promise.allSettled([
+      db.friendship.count({
+        where: {
+          status: ConnectionStatus.ACCEPTED,
+          OR: [{ requesterId: userId }, { addresseeId: userId }],
+        },
+      }),
+      db.partnership.count({
+        where: {
+          status: PartnershipStatus.ACTIVE,
+          OR: [{ initiatorId: userId }, { partnerId: userId }],
+        },
+      }),
+      db.goal.count({ where: { ownerId: userId, status: GoalStatus.ACTIVE } }),
+      db.goal.count({ where: { ownerId: userId, status: GoalStatus.COMPLETED } }),
       db.task.count({ where: { ownerId: userId } }),
       db.$queryRaw<Array<{ count: bigint }>>(
         Prisma.sql`
@@ -784,20 +788,33 @@ export async function getAccountabilityOverviewAction(
             AND "status"::text IN ('COMPLETED', 'DONE')
         `,
       ),
+      db.dailyCheckIn.findMany({
+        where: { userId },
+        orderBy: { checkInDate: "desc" },
+        select: { checkInDate: true },
+        take: 365,
+      }),
     ]);
-    const completedOwnedTasks = Number(completedOwnedTasksRows[0]?.count ?? 0);
+
+    const friendCount = friendCountResult.status === "fulfilled" ? friendCountResult.value : 0;
+    const activePartnerships =
+      activePartnershipsResult.status === "fulfilled" ? activePartnershipsResult.value : 0;
+    const activeGoals = activeGoalsResult.status === "fulfilled" ? activeGoalsResult.value : 0;
+    const completedGoals =
+      completedGoalsResult.status === "fulfilled" ? completedGoalsResult.value : 0;
+    const totalOwnedTasks =
+      totalOwnedTasksResult.status === "fulfilled" ? totalOwnedTasksResult.value : 0;
+    const completedOwnedTasks =
+      completedOwnedTasksResult.status === "fulfilled"
+        ? Number(completedOwnedTasksResult.value[0]?.count ?? 0)
+        : 0;
+    const recentCheckIns =
+      recentCheckInsResult.status === "fulfilled" ? recentCheckInsResult.value : [];
 
     const taskCompletionRate =
       totalOwnedTasks === 0
         ? 0
         : Math.round((completedOwnedTasks / totalOwnedTasks) * 100);
-
-    const recentCheckIns = await db.dailyCheckIn.findMany({
-      where: { userId },
-      orderBy: { checkInDate: "desc" },
-      select: { checkInDate: true },
-      take: 365,
-    });
 
     let currentCheckInStreak = 0;
     const currentDate = normalizeDate();
