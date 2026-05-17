@@ -2,12 +2,29 @@
 
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { IoMdLogIn } from "react-icons/io";
+import { IoLogoGoogle, IoMdLogIn } from "react-icons/io";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { loginAction } from "~/actions/auth";
+import { googleSignInAction, loginAction } from "~/actions/auth";
+import { env } from "~/env";
 import { setPendingNotification, useNotifications } from "~/components/providers/NotificationProvider";
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 interface LoginForm {
   username: string;
@@ -15,13 +32,11 @@ interface LoginForm {
 }
 
 export default function LoginPage() {
-  const {
-    register,
-    handleSubmit,
-  } = useForm<LoginForm>();
+  const { register, handleSubmit } = useForm<LoginForm>();
   const router = useRouter();
   const { error: notifyError, warning: notifyWarning } = useNotifications();
   const [loading, setLoading] = React.useState(false);
+  const [googleLoading, setGoogleLoading] = React.useState(false);
   const [isReady, setIsReady] = React.useState(false);
 
   useEffect(() => {
@@ -35,6 +50,28 @@ export default function LoginPage() {
 
     setIsReady(true);
   }, [router]);
+
+  const handleGoogleCredential = async (credential: string) => {
+    setGoogleLoading(true);
+    try {
+      const result = await googleSignInAction({ credential });
+      if (!result.success || !result.user || !result.token) {
+        notifyError(result.error ?? "Google sign-in failed.");
+        return;
+      }
+
+      sessionStorage.setItem("userId", result.user.id);
+      sessionStorage.setItem("token", result.token);
+      sessionStorage.setItem("username", result.user.username);
+      setPendingNotification("success", "Logged in with Google successfully.");
+      router.push("/tasks");
+    } catch (error) {
+      notifyError("Google sign-in failed. Please try again.");
+      console.error(error);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const onSubmit: SubmitHandler<LoginForm> = async (data) => {
     try {
@@ -60,12 +97,26 @@ export default function LoginPage() {
     }
   };
 
+  const onGoogleSignIn = async () => {
+    if (!window.google?.accounts?.id) {
+      notifyError("Google Sign-In is not available right now.");
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      callback: ({ credential }) => void handleGoogleCredential(credential),
+    });
+    window.google.accounts.id.prompt();
+  };
+
   if (!isReady) {
     return null;
   }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
+      <script src="https://accounts.google.com/gsi/client" async defer />
       <form
         className="notepad relative"
         onSubmit={handleSubmit(onSubmit, (formErrors) => {
@@ -84,7 +135,7 @@ export default function LoginPage() {
           <div className="mb-4 flex flex-col gap-2">
             <div className="flex gap-2">
               <label htmlFor="username" className="text-sm font-semibold">
-              Username
+                Username
               </label>
               <input
                 id="username"
@@ -124,6 +175,18 @@ export default function LoginPage() {
                 <IoMdLogIn className="mr-2" />
               </motion.div>
               Login
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={() => void onGoogleSignIn()}
+              className="box relative mx-auto mt-2 flex w-1/2 items-center justify-center bg-white/70 text-xl text-gray-900"
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.2 }}
+            >
+              {googleLoading && <div className="loader absolute" />}
+              <IoLogoGoogle className="mr-2" />
+              Continue with Google
             </motion.button>
             <p className="mt-3 flex items-center justify-center text-base">
               New here?{" "}
