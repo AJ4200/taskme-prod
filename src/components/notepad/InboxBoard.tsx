@@ -77,7 +77,7 @@ const InboxBoard: React.FC = () => {
           ((requestRes.data as Array<{
             friendshipId: string;
             isIncoming: boolean;
-            status: string;
+            status: ConnectionStatus;
             createdAt: string | Date;
             friend: { username: string };
           }> | undefined) ?? []
@@ -147,7 +147,7 @@ const InboxBoard: React.FC = () => {
       lastIncomingMessageIdRef.current &&
       latestIncoming.id !== lastIncomingMessageIdRef.current
     ) {
-      const senderName = latestIncoming.sender?.username ?? selectedFriendName || "Friend";
+      const senderName = latestIncoming.sender?.username ?? (selectedFriendName || "Friend");
       notifyChat(`New message from ${senderName}.`);
     }
     if (latestIncoming) {

@@ -12,7 +12,7 @@ const ProfileOptions: React.FC = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
     sessionStorage.removeItem("email");
-    setPendingNotification("info", "You have been logged out.");
+    setPendingNotification("warning", "You have been logged out.");
     router.replace("/");
   };
 

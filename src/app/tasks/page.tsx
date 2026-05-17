@@ -14,7 +14,7 @@ export default function TasksPage() {
     const userId = sessionStorage.getItem("userId");
 
     if (!token || !userId) {
-      setPendingNotification("info", "Please log in to continue.");
+      setPendingNotification("warning", "Please log in to continue.");
       router.replace("/");
       return;
     }

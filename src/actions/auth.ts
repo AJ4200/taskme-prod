@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { Prisma } from "@prisma/client";
 import { db } from "~/server/db";
 import { env } from "~/env";
@@ -21,6 +22,21 @@ interface PublicUser {
   id: string;
   username: string;
   email: string;
+}
+
+
+
+interface GoogleSignInInput {
+  credential: string;
+}
+
+function slugifyUsername(seed: string): string {
+  const base = seed
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 18);
+  return base || "user";
 }
 
 interface AuthActionResult {
@@ -146,6 +162,84 @@ export async function registerAction(
       env.NODE_ENV === "development" && error instanceof Error
         ? error.message
         : "Internal Server Error";
+
+    return { success: false, status: 500, error: message };
+  }
+}
+
+
+export async function googleSignInAction(
+  input: GoogleSignInInput,
+): Promise<AuthActionResult> {
+  try {
+    const credential = input.credential?.trim();
+    if (!credential) {
+      return { success: false, status: 400, error: "Google credential is required" };
+    }
+
+    const verifyResponse = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+      { cache: "no-store" },
+    );
+
+    if (!verifyResponse.ok) {
+      return { success: false, status: 401, error: "Invalid Google token" };
+    }
+
+    const payload = (await verifyResponse.json()) as {
+      aud?: string;
+      email?: string;
+      email_verified?: string;
+      name?: string;
+    };
+
+    if (payload.aud !== env.GOOGLE_CLIENT_ID) {
+      return { success: false, status: 401, error: "Google token audience mismatch" };
+    }
+
+    const email = payload.email?.toLowerCase();
+
+    if (!email || payload.email_verified !== "true") {
+      return { success: false, status: 401, error: "Google account email is not verified" };
+    }
+
+    const nameSeed = payload.name ?? email.split("@")[0] ?? "user";
+
+    let user = await db.user.findUnique({ where: { email } });
+
+    if (!user) {
+      const base = slugifyUsername(nameSeed);
+      let username = base;
+      let i = 0;
+      while (await db.user.findUnique({ where: { username } })) {
+        i += 1;
+        username = `${base}_${i}`;
+      }
+
+      const generatedPassword = await bcrypt.hash(crypto.randomUUID(), 10);
+      user = await db.user.create({
+        data: {
+          email,
+          username,
+          password: generatedPassword,
+        },
+      });
+    }
+
+    const token = jwt.sign({ userId: user.id }, env.JWT_SECRET, { expiresIn: "1d" });
+
+    return {
+      success: true,
+      status: 200,
+      token,
+      user: { id: user.id, username: user.username, email: user.email },
+    };
+  } catch (error) {
+    console.error(error);
+    const message =
+      env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : "Google sign-in failed";
 
     return { success: false, status: 500, error: message };
   }
