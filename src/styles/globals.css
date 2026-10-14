@@ -4,7 +4,7 @@
 
 body
 {
-  background-image: url("taskme-desk.jpg");
+  background-image: url("/taskme-desk.jpg");
   background-repeat: no-repeat;
   background-size: cover;
 }
