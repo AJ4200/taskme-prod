@@ -18,15 +18,15 @@ const ProfileOptions: React.FC = () => {
 
   return (
     <div
-      className="paper absolute right-[3rem] top-10 z-50"
-      style={{
-        height: "15rem",
-        width: "17rem",
-      }}
+      id="profile-options"
+      className="paper absolute right-0 top-full z-50"
+      style={{ height: "15rem", width: "min(17rem, 100%)" }}
     >
       <ol>
-        <li className="cursor-pointer font-semibold" onClick={handleLogOut}>
-          Log Out
+        <li>
+          <button type="button" className="font-semibold" onClick={handleLogOut}>
+            Log Out
+          </button>
         </li>
       </ol>
     </div>

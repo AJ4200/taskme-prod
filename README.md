@@ -19,6 +19,7 @@ Here're some of the project's best features:
 *   Users can sign in and assign tasks to each other.
 *   Tasks can be tracked based on their status priority and due date.
 *   Collaborative task management for improved productivity.
+*   A mobile-friendly notepad header with accessible task, inbox, and profile controls.
 
 <h2>🛠️ Installation Steps:</h2>
 

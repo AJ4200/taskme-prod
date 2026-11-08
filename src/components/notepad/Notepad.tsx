@@ -78,41 +78,48 @@ const Notepad: React.FC = () => {
 
   return (
     <div className="notepad relative">
-      <div className="top">
-        <div className="flex justify-between">
+      <header className="top notepad-header">
+        <div className="notepad-header-layout">
           {username ? (
-            <div className="my-2 ml-2 flex items-center gap-2">
+            <nav className="notepad-header-nav" aria-label="Notepad views">
               <button
-                className={`box flex items-center gap-2 px-3 ${
+                type="button"
+                className={`box flex min-h-11 items-center gap-2 px-3 ${
                   view === "tasks" ? "bg-amber-100" : "bg-gray-100"
                 }`}
+                aria-pressed={view === "tasks"}
                 onClick={() => setView("tasks")}
               >
                 <FaTasks className="text-sm" />
                 Tasks
               </button>
               <button
-                className={`box flex items-center gap-2 px-3 ${
+                type="button"
+                className={`box flex min-h-11 items-center gap-2 px-3 ${
                   view === "inbox" ? "bg-amber-100" : "bg-gray-100"
                 }`}
+                aria-pressed={view === "inbox"}
                 onClick={() => setView("inbox")}
               >
                 <FaBell className="text-sm" />
                 Inbox
               </button>
-            </div>
+            </nav>
           ) : (
-            <Link className="flip m-2" href="/register">
-              Register
-            </Link>
+            <div className="notepad-header-nav">
+              <Link className="flip" href="/register">
+                Register
+              </Link>
+            </div>
           )}
 
-          <div className="flex items-center">
-            <div className="ml-2 flex items-center space-x-1">
+          <div className="notepad-header-brand">
+            <div className="flex items-center gap-2">
               <motion.a
                 href="https://github.com/aj4200"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="GitHub"
                 whileHover={{ scale: 1.1 }}
               >
                 <FaGithub className="text-lg text-gray-300 hover:opacity-50" />
@@ -122,35 +129,41 @@ const Notepad: React.FC = () => {
                 href="https://www.linkedin.com/in/abel-majadibodu-5a0583193/"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="LinkedIn"
                 whileHover={{ scale: 1.1 }}
               >
                 <FaLinkedin className="text-lg text-gray-300 hover:opacity-50" />
               </motion.a>
-            </div>{" "}
+            </div>
             <Link href="/">
-              <h1 className="text-center text-4xl text-gray-300">
+              <h1 className="whitespace-nowrap text-center text-3xl text-gray-300">
                 Task.Me<span className="text-xs">alpha 1.2</span>
               </h1>
             </Link>
           </div>
 
-          <div className="my-2 mr-2 flex items-center">
+          <div className="notepad-header-profile">
             {username ? (
               <motion.button
                 type="button"
-                className="flex"
+                className="flex min-h-11 min-w-0 items-center gap-2"
+                aria-label={`Profile options for ${username}`}
+                aria-expanded={options}
+                aria-controls={options ? "profile-options" : undefined}
+                title={username}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => {
-                  setOptions(!options);
+                  setOptions((isOpen) => !isOpen);
                 }}
               >
-                <p className="mr-2 mt-2 text-lg font-bold text-gray-200">
+                <span className="min-w-0 truncate text-lg font-bold text-gray-200">
                   {username}
-                </p>
+                </span>
                 <svg
-                  className="w-8 h-8 rounded-full object-cover"
-                  dangerouslySetInnerHTML={{ __html: multiavatar(username || "") }}
+                  className="h-8 w-8 shrink-0 rounded-full object-cover"
+                  aria-hidden="true"
+                  dangerouslySetInnerHTML={{ __html: multiavatar(username) }}
                 />
               </motion.button>
             ) : (
@@ -160,8 +173,8 @@ const Notepad: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-      {options && <ProfileOptions />}
+        {options && <ProfileOptions />}
+      </header>
       <div className="paper">
         {view === "tasks" ? (
           <TasksBoard onOpenAccountability={() => setView("accountability")} />
