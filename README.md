@@ -20,7 +20,6 @@ Here're some of the project's best features:
 *   Tasks can be tracked based on their status priority and due date.
 *   Collaborative task management for improved productivity.
 *   Switch between Tasks, Accountability, and Inbox from the responsive notepad header.
-*   A mobile-friendly notepad header with accessible task, inbox, and profile controls.
 
 <h2>🛠️ Installation Steps:</h2>
 

@@ -33,7 +33,6 @@ const Homepage: React.FC = () => {
                 href="https://github.com/aj4200"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="GitHub"
                 whileHover={{ scale: 1.1 }}
               >
                 <FaGithub className="text-lg text-gray-300 hover:opacity-50" />
@@ -43,7 +42,6 @@ const Homepage: React.FC = () => {
                 href="https://www.linkedin.com/in/abel-majadibodu-5a0583193/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="LinkedIn"
                 whileHover={{ scale: 1.1 }}
               >
                 <FaLinkedin className="text-lg text-gray-300 hover:opacity-50" />
