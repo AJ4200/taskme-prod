@@ -36,23 +36,9 @@ body
 
 .box:not(button):not([role="button"])
 {
-  border-radius: 16% 84% 18% 82% / 10% 16% 84% 90%;
-}
-
-article.box:not(button):not([role="button"]),
-li.box:not(button):not([role="button"])
-{
-  border-radius: 8% 92% 12% 88% / 86% 14% 90% 10%;
-}
-
-form.box:not(button):not([role="button"])
-{
-  border-radius: 5% 95% 7% 93% / 12% 9% 91% 88%;
-}
-
-p.box:not(button):not([role="button"])
-{
-  border-radius: 20% 80% 16% 84% / 82% 18% 86% 14%;
+  min-width: 0;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
 }
 
 input
