@@ -5,7 +5,7 @@ import { ConnectionStatus } from "@prisma/client";
 import AccountabilityBoard from "./AccountabilityBoard";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaBell, FaGithub, FaLinkedin, FaTasks } from "react-icons/fa";
+import { FaBell, FaGithub, FaHandshake, FaLinkedin, FaTasks } from "react-icons/fa";
 import ProfileOptions from "./ProfileOptions";
 import TasksBoard from "./TasksBoard";
 import multiavatar from "@multiavatar/multiavatar/esm";
@@ -77,42 +77,9 @@ const Notepad: React.FC = () => {
   }, []);
 
   return (
-    <div className="notepad relative">
+    <div className="notepad notepad-workspace relative">
       <header className="top notepad-header">
         <div className="notepad-header-layout">
-          {username ? (
-            <nav className="notepad-header-nav" aria-label="Notepad views">
-              <button
-                type="button"
-                className={`box flex min-h-11 items-center gap-2 px-3 ${
-                  view === "tasks" ? "bg-amber-100" : "bg-gray-100"
-                }`}
-                aria-pressed={view === "tasks"}
-                onClick={() => setView("tasks")}
-              >
-                <FaTasks className="text-sm" />
-                Tasks
-              </button>
-              <button
-                type="button"
-                className={`box flex min-h-11 items-center gap-2 px-3 ${
-                  view === "inbox" ? "bg-amber-100" : "bg-gray-100"
-                }`}
-                aria-pressed={view === "inbox"}
-                onClick={() => setView("inbox")}
-              >
-                <FaBell className="text-sm" />
-                Inbox
-              </button>
-            </nav>
-          ) : (
-            <div className="notepad-header-nav">
-              <Link className="flip" href="/register">
-                Register
-              </Link>
-            </div>
-          )}
-
           <div className="notepad-header-brand">
             <div className="flex items-center gap-2">
               <motion.a
@@ -153,9 +120,7 @@ const Notepad: React.FC = () => {
                 title={username}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => {
-                  setOptions((isOpen) => !isOpen);
-                }}
+                onClick={() => setOptions((isOpen) => !isOpen)}
               >
                 <span className="min-w-0 truncate text-lg font-bold text-gray-200">
                   {username}
@@ -172,6 +137,49 @@ const Notepad: React.FC = () => {
               </Link>
             )}
           </div>
+          {username ? (
+            <nav className="notepad-header-nav" aria-label="Notepad views">
+              <button
+                type="button"
+                className={`box flex min-h-11 items-center gap-2 px-3 ${
+                  view === "tasks" ? "bg-amber-100" : "bg-gray-100"
+                }`}
+                aria-pressed={view === "tasks"}
+                onClick={() => setView("tasks")}
+              >
+                <FaTasks className="text-sm" />
+                Tasks
+              </button>
+              <button
+                type="button"
+                className={`box flex min-h-11 items-center gap-2 px-3 ${
+                  view === "accountability" ? "bg-amber-100" : "bg-gray-100"
+                }`}
+                aria-pressed={view === "accountability"}
+                onClick={() => setView("accountability")}
+              >
+                <FaHandshake className="text-sm" />
+                Accountability
+              </button>
+              <button
+                type="button"
+                className={`box flex min-h-11 items-center gap-2 px-3 ${
+                  view === "inbox" ? "bg-amber-100" : "bg-gray-100"
+                }`}
+                aria-pressed={view === "inbox"}
+                onClick={() => setView("inbox")}
+              >
+                <FaBell className="text-sm" />
+                Inbox
+              </button>
+            </nav>
+          ) : (
+            <div className="notepad-header-nav">
+              <Link className="flip" href="/register">
+                Register
+              </Link>
+            </div>
+          )}
         </div>
         {options && <ProfileOptions />}
       </header>

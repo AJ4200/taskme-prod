@@ -30,16 +30,25 @@ body {
   border-radius: 5px 5px 0 0;
 }
 
+.notepad-workspace {
+  display: flex;
+  flex-direction: column;
+}
+
+.notepad-header {
+  z-index: 1;
+  flex-shrink: 0;
+  height: auto;
+}
+
 .notepad-header-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  min-height: 60px;
   padding: 8px;
 }
 
-.notepad-header-nav,
 .notepad-header-brand,
 .notepad-header-profile {
   display: flex;
@@ -52,35 +61,22 @@ body {
   justify-content: flex-end;
 }
 
-@media (max-width: 700px) {
-  .notepad {
-    width: calc(100% - 24px);
-  }
-
-  .notepad-header-layout {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .notepad-header-brand {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .notepad-header-profile {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .notepad-header-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    flex-wrap: wrap;
-  }
+.notepad-header-nav {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .notepad > .paper {
   min-height: 0;
   flex-shrink: 1;
+}
+
+@media (max-width: 700px) {
+  .notepad {
+    width: calc(100% - 24px);
+  }
 }
 
 .paper {
