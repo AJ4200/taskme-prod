@@ -193,7 +193,7 @@ const InboxBoard: React.FC = () => {
     <div className="space-y-4">
       <h2 className="text-center text-4xl underline">Inbox</h2>
 
-      <div className="box bg-yellow-50 p-3">
+      <div className="box note-card bg-yellow-50 p-3">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-lg font-semibold">Inbox Alerts ({alertCount})</p>
           <button type="button" className="box bg-white px-2 text-sm" onClick={() => void refresh(userId)}>
@@ -223,7 +223,7 @@ const InboxBoard: React.FC = () => {
         </div>
       </div>
 
-      <div className="box bg-sky-50 p-3">
+      <div className="box note-card bg-sky-50 p-3">
         <h3 className="mb-2 text-2xl underline">Messages (friends only)</h3>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[220px,1fr]">
           <div className="max-h-[22rem] space-y-2 overflow-y-auto border border-gray-700/20 p-2">

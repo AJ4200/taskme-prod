@@ -43,16 +43,20 @@ body
 {
   position: relative;
   min-width: 0;
-  padding-top: 26px;
-  padding-bottom: 20px;
   border: 1px solid rgba(80, 65, 40, 0.22);
   border-radius: 0;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
-  filter: drop-shadow(2px 3px 3px rgba(50, 40, 25, 0.16));
   overflow-wrap: anywhere;
 }
 
-.box:not(button):not([role="button"])::before
+.box.note-card
+{
+  padding-top: 26px;
+  padding-bottom: 20px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+  filter: drop-shadow(2px 3px 3px rgba(50, 40, 25, 0.16));
+}
+
+.note-card::before
 {
   content: "";
   position: absolute;
@@ -65,7 +69,7 @@ body
   pointer-events: none;
 }
 
-.box:not(button):not([role="button"])::after
+.note-card::after
 {
   content: "";
   position: absolute;
@@ -81,6 +85,14 @@ body
 input
 {
     background-color: transparent;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+select,
+textarea
+{
+  border: 0;
+  border-bottom: 2px dashed #353535;
+  border-radius: 0;
 }
 input:focus
 {
