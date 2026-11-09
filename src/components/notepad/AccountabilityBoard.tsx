@@ -284,7 +284,7 @@ const AccountabilityBoard: React.FC = () => {
             </button>
           </form>
           {friends.map((friend) => (
-            <div key={friend.friendshipId} className="box bg-white/70 p-3">
+            <div key={friend.friendshipId} className="box bg-white p-3">
               <p>
                 <span className="font-bold">{friend.friend.username}</span> - {friend.status}
               </p>
@@ -392,7 +392,7 @@ const AccountabilityBoard: React.FC = () => {
               partnership.partnerId === userId &&
               partnership.status === PartnershipStatus.PENDING;
             return (
-              <div key={partnership.id} className="box bg-white/70 p-3">
+              <div key={partnership.id} className="box bg-white p-3">
                 <p>
                   {partnership.kind} with <span className="font-bold">{other}</span>
                 </p>
@@ -497,7 +497,7 @@ const AccountabilityBoard: React.FC = () => {
             </button>
           </form>
           {goals.map((goal) => (
-            <div key={goal.id} className="box bg-white/70 p-3">
+            <div key={goal.id} className="box bg-white p-3">
               <p className="font-bold">{goal.title}</p>
               <p>
                 {goal.status} | {goal.cadence} | {goal.progress}%
@@ -616,7 +616,7 @@ const AccountabilityBoard: React.FC = () => {
             </button>
           </form>
           {checkIns.slice(0, 10).map((checkIn) => (
-            <div key={checkIn.id} className="box bg-white/70 p-3">
+            <div key={checkIn.id} className="box bg-white p-3">
               <p className="font-bold">{fmt(checkIn.checkInDate)}</p>
               <p>{checkIn.summary}</p>
               {checkIn.progressScore !== undefined && checkIn.progressScore !== null && (
@@ -689,7 +689,7 @@ const AccountabilityBoard: React.FC = () => {
             </button>
           </form>
           {reviews.slice(0, 10).map((review) => (
-            <div key={review.id} className="box bg-white/70 p-3">
+            <div key={review.id} className="box bg-white p-3">
               <p className="font-bold">Week of {fmt(review.weekStartDate)}</p>
               {review.wins && <p>Wins: {review.wins}</p>}
               {review.challenges && <p>Challenges: {review.challenges}</p>}

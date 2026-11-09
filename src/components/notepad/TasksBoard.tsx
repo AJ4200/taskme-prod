@@ -357,7 +357,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
 
   return (
     <div className="space-y-3">
-      <div className="box bg-yellow-50/80 p-3">
+      <div className="box bg-yellow-50 p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-3xl underline">
             <FaSyncAlt className="text-lg" />
@@ -409,7 +409,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
         </button>
       </div>
 
-      <form className="box bg-white/70 p-3 text-base" onSubmit={handleCreateTask}>
+      <form className="box bg-white p-3 text-base" onSubmit={handleCreateTask}>
         <h3 className="mb-2 flex items-center gap-2 text-2xl underline">
           <FaPlus className="text-sm" />
           Create Task
@@ -494,7 +494,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
 
       <div className="space-y-3 text-base">
         {tasks.length === 0 ? (
-          <div className="box bg-white/70 p-3">
+          <div className="box bg-white p-3">
             No {scope === "owned" ? "owned" : "assigned"} tasks found.
           </div>
         ) : (
@@ -505,7 +505,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
               .filter((goal): goal is NonNullable<typeof goal> => Boolean(goal));
 
             return (
-              <article key={task.id} className="box bg-white/80 p-3">
+              <article key={task.id} className="box bg-white p-3">
                 {isEditing && editDraft ? (
                   <div className="space-y-2">
                     <input
