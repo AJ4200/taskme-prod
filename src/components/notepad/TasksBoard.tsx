@@ -105,6 +105,7 @@ const toTaskLabel = (value: string) =>
 const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
   const { success: notifySuccess, error: notifyError } = useNotifications();
   const [scope, setScope] = useState<TaskScope>("owned");
+  const [showCreateTask, setShowCreateTask] = useState(false);
   const [userId, setUserId] = useState("");
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [users, setUsers] = useState<SimpleUser[]>([]);
@@ -233,6 +234,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
       status: TaskStatus.TODO,
       priority: TaskPriority.MEDIUM,
     }));
+    setShowCreateTask(false);
     await finishAndRefresh(`Task "${title}" created.`);
     setBusyId(null);
   };
@@ -387,29 +389,51 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-lg font-semibold">View:</span>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          className="inline-flex rounded-md border border-gray-400 bg-white p-1 text-base font-semibold"
+          role="group"
+          aria-label="Task view"
+        >
+          <button
+            type="button"
+            className={`min-h-11 rounded px-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800 ${
+              scope === "owned" ? "bg-gray-800 text-white" : "text-gray-700 hover:bg-gray-100"
+            }`}
+            aria-pressed={scope === "owned"}
+            onClick={() => setScope("owned")}
+          >
+            Owned
+          </button>
+          <button
+            type="button"
+            className={`min-h-11 rounded px-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800 ${
+              scope === "assigned" ? "bg-gray-800 text-white" : "text-gray-700 hover:bg-gray-100"
+            }`}
+            aria-pressed={scope === "assigned"}
+            onClick={() => setScope("assigned")}
+          >
+            Assigned
+          </button>
+        </div>
         <button
           type="button"
-          className={`box px-3 text-base font-semibold ${
-            scope === "owned" ? "bg-amber-100" : "bg-white/70"
-          }`}
-          onClick={() => setScope("owned")}
+          className="box ml-auto flex min-h-11 items-center gap-2 bg-amber-100 px-3 text-base font-semibold"
+          aria-expanded={showCreateTask}
+          aria-controls="create-task-form"
+          onClick={() => setShowCreateTask((isOpen) => !isOpen)}
         >
-          Owned
-        </button>
-        <button
-          type="button"
-          className={`box px-3 text-base font-semibold ${
-            scope === "assigned" ? "bg-amber-100" : "bg-white/70"
-          }`}
-          onClick={() => setScope("assigned")}
-        >
-          Assigned
+          <FaPlus aria-hidden="true" className="text-sm" />
+          Create Task
         </button>
       </div>
 
-      <form className="box note-card bg-white p-3 text-base" onSubmit={handleCreateTask}>
+      <form
+        id="create-task-form"
+        className="box note-card bg-white p-3 text-base"
+        hidden={!showCreateTask}
+        onSubmit={handleCreateTask}
+      >
         <h3 className="mb-2 flex items-center gap-2 text-2xl underline">
           <FaPlus className="text-sm" />
           Create Task
