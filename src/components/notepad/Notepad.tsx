@@ -17,11 +17,13 @@ import { useNotifications } from "../providers/NotificationProvider";
 const Notepad: React.FC = () => {
   const [view, setView] = useState<"tasks" | "accountability" | "inbox">("tasks");
   const [username, setUsername] = useState<string | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [options, setOptions] = useState(false);
   const { request: notifyRequest, warning: notifyWarning } = useNotifications();
 
   useEffect(() => {
     setUsername(sessionStorage.getItem("username"));
+    setProfilePicture(sessionStorage.getItem("profilePicture"));
   }, []);
 
   useEffect(() => {
@@ -125,11 +127,26 @@ const Notepad: React.FC = () => {
                 <span className="min-w-0 truncate text-lg font-bold text-gray-200">
                   {username}
                 </span>
-                <svg
-                  className="h-8 w-8 shrink-0 rounded-full object-cover"
-                  aria-hidden="true"
-                  dangerouslySetInnerHTML={{ __html: multiavatar(username) }}
-                />
+                {profilePicture ? (
+                  // The Google-provided image URL is already sized and can change between sign-ins.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profilePicture}
+                    className="h-8 w-8 shrink-0 rounded-full object-cover"
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    onError={() => {
+                      console.warn("Google profile picture could not be loaded");
+                      setProfilePicture(null);
+                    }}
+                  />
+                ) : (
+                  <svg
+                    className="h-8 w-8 shrink-0 rounded-full object-cover"
+                    aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: multiavatar(username) }}
+                  />
+                )}
               </motion.button>
             ) : (
               <Link className="flip" href="/login">

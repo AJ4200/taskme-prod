@@ -63,6 +63,11 @@ export default function LoginPage() {
       sessionStorage.setItem("userId", result.user.id);
       sessionStorage.setItem("token", result.token);
       sessionStorage.setItem("username", result.user.username);
+      if (result.user.picture) {
+        sessionStorage.setItem("profilePicture", result.user.picture);
+      } else {
+        sessionStorage.removeItem("profilePicture");
+      }
       setPendingNotification("success", "Logged in with Google successfully.");
       router.push("/tasks");
     } catch (error) {
@@ -82,6 +87,7 @@ export default function LoginPage() {
         sessionStorage.setItem("userId", result.user.id);
         sessionStorage.setItem("token", result.token);
         sessionStorage.setItem("username", result.user.username);
+        sessionStorage.removeItem("profilePicture");
         setPendingNotification("success", "Logged in successfully.");
         router.push("/tasks");
       } else {

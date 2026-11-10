@@ -391,7 +391,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
-          className="inline-flex overflow-hidden rounded border-[3px] border-dotted border-[#353535] bg-white/70 text-base font-semibold"
+          className="task-scope-selector inline-flex overflow-hidden border-[3px] border-dotted border-[#353535] bg-white/70 text-base font-semibold"
           role="group"
           aria-label="Task view"
         >

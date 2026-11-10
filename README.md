@@ -20,6 +20,7 @@ Here're some of the project's best features:
 *   Tasks can be tracked based on their status priority and due date.
 *   Collaborative task management for improved productivity.
 *   Switch between Tasks, Accountability, and Inbox from the responsive notepad header.
+*   Google sign-in uses your Google profile picture for the current session when available; other sign-ins use a generated avatar.
 
 <h2>🛠️ Installation Steps:</h2>
 

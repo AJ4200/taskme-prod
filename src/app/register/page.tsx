@@ -51,6 +51,7 @@ export default function RegisterPage() {
       sessionStorage.setItem("userId", result.user.id);
       sessionStorage.setItem("token", result.token);
       sessionStorage.setItem("username", result.user.username);
+      sessionStorage.removeItem("profilePicture");
       console.log("Registration successful:", user);
 
       setPendingNotification("success", "Account created successfully.");

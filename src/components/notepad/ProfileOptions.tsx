@@ -11,6 +11,7 @@ const ProfileOptions: React.FC = () => {
     sessionStorage.removeItem("userId");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("username");
+    sessionStorage.removeItem("profilePicture");
     sessionStorage.removeItem("email");
     setPendingNotification("warning", "You have been logged out.");
     router.replace("/");

@@ -22,6 +22,7 @@ interface PublicUser {
   id: string;
   username: string;
   email: string;
+  picture?: string;
 }
 
 
@@ -191,6 +192,7 @@ export async function googleSignInAction(
       email?: string;
       email_verified?: string;
       name?: string;
+      picture?: string;
     };
 
     if (payload.aud !== env.GOOGLE_CLIENT_ID) {
@@ -201,6 +203,20 @@ export async function googleSignInAction(
 
     if (!email || payload.email_verified !== "true") {
       return { success: false, status: 401, error: "Google account email is not verified" };
+    }
+
+    let picture: string | undefined;
+    if (payload.picture) {
+      try {
+        const url = new URL(payload.picture);
+        if (url.protocol === "https:" && url.hostname === "lh3.googleusercontent.com") {
+          picture = url.href;
+        } else {
+          console.warn("Google profile picture URL has an unexpected host or protocol");
+        }
+      } catch {
+        console.warn("Google profile picture URL is invalid");
+      }
     }
 
     const nameSeed = payload.name ?? email.split("@")[0] ?? "user";
@@ -232,7 +248,7 @@ export async function googleSignInAction(
       success: true,
       status: 200,
       token,
-      user: { id: user.id, username: user.username, email: user.email },
+      user: { id: user.id, username: user.username, email: user.email, picture },
     };
   } catch (error) {
     console.error(error);
