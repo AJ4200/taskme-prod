@@ -391,13 +391,13 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
-          className="flex flex-wrap gap-2 text-base font-semibold"
+          className="inline-flex overflow-hidden rounded border-[3px] border-dotted border-[#353535] bg-white/70 text-base font-semibold"
           role="group"
           aria-label="Task view"
         >
           <button
             type="button"
-            className={`box min-h-11 px-3 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800 ${
+            className={`min-h-11 border-r-[3px] border-dotted border-[#353535] px-3 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-gray-800 ${
               scope === "owned" ? "bg-amber-100" : "bg-white/70 hover:bg-amber-50"
             }`}
             aria-pressed={scope === "owned"}
@@ -407,7 +407,7 @@ const TasksBoard: React.FC<TasksBoardProps> = ({ onOpenAccountability }) => {
           </button>
           <button
             type="button"
-            className={`box min-h-11 px-3 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800 ${
+            className={`min-h-11 px-3 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-gray-800 ${
               scope === "assigned" ? "bg-amber-100" : "bg-white/70 hover:bg-amber-50"
             }`}
             aria-pressed={scope === "assigned"}
